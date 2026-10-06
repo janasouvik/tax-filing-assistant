@@ -271,3 +271,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+.env.local
+!*.example
+!.env.example
