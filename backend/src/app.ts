@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { config } from './config';
 import { errorHandler } from './utils/response';
+import { clerkMiddleware } from '@clerk/express';
 
 import authRoutes from './routes/auth.routes';
 import workspaceRoutes from './routes/workspace.routes';
@@ -28,6 +29,9 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 200, standardHeaders: true, l
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Clerk Middleware
+app.use(clerkMiddleware());
 
 // Health checks
 app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));

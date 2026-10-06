@@ -1,15 +1,13 @@
 import { Router } from 'express';
+import { requireAuth } from '@clerk/express';
 import * as ctrl from '../controllers/auth.controller';
-import { validate } from '../middlewares/validate';
-import { authenticate } from '../middlewares/auth';
-import { registerSchema, loginSchema, refreshSchema } from '../validators';
+import { authenticate, loadUser } from '../middlewares/auth';
 
 const router = Router();
 
-router.post('/register', validate(registerSchema), ctrl.register);
-router.post('/login', validate(loginSchema), ctrl.login);
-router.post('/refresh', validate(refreshSchema), ctrl.refresh);
-router.post('/logout', validate(refreshSchema), ctrl.logout);
-router.get('/me', authenticate, ctrl.me);
+// Endpoint called by frontend after Clerk login to sync the user in our database
+// Notice we only use `requireAuth` here, not `loadUser`, because `loadUser` expects the DB user to exist!
+router.post('/sync', requireAuth({ signInUrl: undefined }), ctrl.syncUser);
+router.get('/me', authenticate, loadUser, ctrl.me);
 
 export default router;

@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/workspace.controller';
-import { authenticate } from '../middlewares/auth';
+import { authenticate, loadUser } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { workspaceSchema, workspacePatchSchema } from '../validators';
 
 const router = Router();
-router.use(authenticate);
+router.use(authenticate, loadUser);
 
 router.get('/', ctrl.getWorkspaces);
 router.post('/', validate(workspaceSchema), ctrl.createWorkspace);

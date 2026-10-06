@@ -14,6 +14,10 @@ import HowItWorks from './pages/HowItWorks';
 import Home from './pages/Home';
 import CAFirmPracticeDashboardMultiClientCockpit from './pages/CAFirmPracticeDashboardMultiClientCockpit';
 import TaxCalculationEngineSlabsOldvsNewRegime from './pages/TaxCalculationEngineSlabsOldvsNewRegime';
+import SignInPage from './pages/SignInPage';
+import SignUpPage from './pages/SignUpPage';
+import DashboardRouter from './pages/DashboardRouter';
+import Onboarding from './pages/Onboarding';
 
 function App() {
   return (
@@ -34,6 +38,10 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/cafirmpracticedashboardmulticlientcockpit" element={<CAFirmPracticeDashboardMultiClientCockpit />} />
         <Route path="/taxcalculationengineslabsoldvsnewregime" element={<TaxCalculationEngineSlabsOldvsNewRegime />} />
+        <Route path="/sign-in/*" element={<SignInPage />} />
+        <Route path="/sign-up/*" element={<SignUpPage />} />
+        <Route path="/dashboard-router" element={<DashboardRouter />} />
+        <Route path="/onboarding" element={<Onboarding />} />
       </Routes>
     </Router>
   );

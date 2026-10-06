@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/business.controller';
-import { authenticate } from '../middlewares/auth';
+import { authenticate, loadUser } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { businessSchema, expenseSchema, transactionSchema } from '../validators';
 
 const router = Router();
-router.use(authenticate);
+router.use(authenticate, loadUser);
 
 router.get('/workspaces/:workspaceId/businesses', ctrl.getBusinesses);
 router.post('/workspaces/:workspaceId/businesses', validate(businessSchema), ctrl.createBusiness);

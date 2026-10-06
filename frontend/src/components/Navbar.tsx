@@ -1,5 +1,15 @@
 import { Link, NavLink } from 'react-router-dom';
-import { useState } from 'react';
+import { UserButton, useAuth } from '@clerk/react';
+
+const SignedIn = ({ children }: { children: React.ReactNode }) => {
+  const { isSignedIn } = useAuth();
+  return isSignedIn ? <>{children}</> : null;
+};
+
+const SignedOut = ({ children }: { children: React.ReactNode }) => {
+  const { isSignedIn } = useAuth();
+  return !isSignedIn ? <>{children}</> : null;
+};
 
 const NavItem = ({ to, label }: { to: string, label: string }) => (
   <NavLink
@@ -24,8 +34,6 @@ const NavItem = ({ to, label }: { to: string, label: string }) => (
 );
 
 export default function Navbar() {
-  // Dummy authentication state for UI demonstration
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#F7F5F1] border-b border-[#D8D1C9]">
@@ -44,19 +52,14 @@ export default function Navbar() {
           <NavItem to="/pricingplans" label="Pricing" />
         </nav>
         <div className="flex items-center gap-4 shrink-0">
-          {!isLoggedIn ? (
-            <>
-              <button onClick={() => setIsLoggedIn(true)} className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface font-medium transition-colors hidden sm:inline-block">Login</button>
-              <Link className="bg-primary-container hover:bg-tertiary-container text-on-primary font-body-sm text-body-sm font-medium px-4 py-2 rounded-lg border border-[#784E34] transition-all duration-150 inline-flex items-center justify-center shadow-sm" data-path="get-started" to="/individualtaxdashboard">Get Started</Link>
-            </>
-          ) : (
-            <>
-              <button onClick={() => setIsLoggedIn(false)} className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface font-medium transition-colors hidden sm:inline-block">Logout</button>
-              <Link to="/individualtaxdashboard" className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-on-primary text-[18px]">person</span>
-              </Link>
-            </>
-          )}
+          <SignedOut>
+            <Link to="/sign-in" className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface font-medium transition-colors hidden sm:inline-block">Login</Link>
+            <Link className="bg-primary-container hover:bg-tertiary-container text-on-primary font-body-sm text-body-sm font-medium px-4 py-2 rounded-lg border border-[#784E34] transition-all duration-150 inline-flex items-center justify-center shadow-sm" data-path="get-started" to="/sign-up">Get Started</Link>
+          </SignedOut>
+          <SignedIn>
+            <Link to="/dashboard-router" className="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface font-medium transition-colors hidden sm:inline-block mr-2">Dashboard</Link>
+            <UserButton />
+          </SignedIn>
         </div>
       </div>
     </header>

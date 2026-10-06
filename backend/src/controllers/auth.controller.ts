@@ -1,29 +1,60 @@
-import { Request, Response } from 'express';
-import * as authService from '../services/auth.service';
-import { successResponse, asyncHandler } from '../utils/response';
+import { Request, Response, NextFunction } from 'express';
+import { getAuth } from '@clerk/express';
+import prisma from '../config/prisma';
 import { AuthRequest } from '../middlewares/auth';
 
-export const register = asyncHandler(async (req: Request, res: Response) => {
-  const user = await authService.registerUser(req.body.email, req.body.name, req.body.password);
-  res.status(201).json(successResponse(user));
-});
+export const syncUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const auth = getAuth(req);
+    const { email, name } = req.body;
+    
+    if (!auth.userId || !email) {
+      res.status(400).json({ error: { code: 'BAD_REQUEST', message: 'Missing userId or email' } });
+      return;
+    }
 
-export const login = asyncHandler(async (req: Request, res: Response) => {
-  const result = await authService.loginUser(req.body.email, req.body.password);
-  res.json(successResponse(result));
-});
+    let user = await prisma.user.findUnique({ where: { clerkId: auth.userId } });
 
-export const refresh = asyncHandler(async (req: Request, res: Response) => {
-  const result = await authService.refreshAccessToken(req.body.refreshToken);
-  res.json(successResponse(result));
-});
+    if (!user) {
+      // Create user if not exists
+      user = await prisma.user.create({
+        data: {
+          clerkId: auth.userId,
+          email: email,
+          firstName: name?.split(' ')[0] || '',
+          lastName: name?.split(' ').slice(1).join(' ') || '',
+        }
+      });
+    }
 
-export const logout = asyncHandler(async (req: Request, res: Response) => {
-  await authService.logoutUser(req.body.refreshToken);
-  res.json(successResponse({ message: 'Logged out successfully' }));
-});
+    // Fetch workspaces to return
+    const workspaces = await prisma.workspace.findMany({
+      where: { userId: user.id }
+    });
 
-export const me = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const user = await authService.getMe(req.user!.userId);
-  res.json(successResponse(user));
-});
+    res.status(200).json({
+      user,
+      workspaces
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const me = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      include: { workspaces: true }
+    });
+
+    res.status(200).json({ user });
+  } catch (error) {
+    next(error);
+  }
+};

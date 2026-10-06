@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/copilot.controller';
-import { authenticate } from '../middlewares/auth';
+import { authenticate, loadUser } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { copilotMessageSchema, copilotConversationSchema } from '../validators';
 
 const router = Router();
-router.use(authenticate);
+router.use(authenticate, loadUser);
 
 router.get('/workspaces/:workspaceId/copilot/conversations', ctrl.getConversations);
 router.post('/workspaces/:workspaceId/copilot/conversations', validate(copilotConversationSchema), ctrl.createConversation);

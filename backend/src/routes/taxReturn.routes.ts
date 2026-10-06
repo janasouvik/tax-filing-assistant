@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/taxReturn.controller';
-import { authenticate } from '../middlewares/auth';
+import { authenticate, loadUser } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { taxReturnSchema, incomeSchema, deductionSchema, issueUpdateSchema } from '../validators';
 
 const router = Router();
-router.use(authenticate);
+router.use(authenticate, loadUser);
 
 // Tax Returns (scoped under workspace)
 router.get('/workspaces/:workspaceId/tax-returns', ctrl.getTaxReturns);

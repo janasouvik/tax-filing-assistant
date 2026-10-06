@@ -141,35 +141,22 @@ enum ComplianceStatus {
 // ======================== MODELS ========================
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  name         String
-  passwordHash String
-  isVerified   Boolean  @default(false)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id        String   @id @default(uuid())
+  clerkId   String   @unique
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  workspaces     Workspace[]
-  refreshTokens  RefreshToken[]
-  auditLogs      AuditLog[]
+  workspaces Workspace[]
+  auditLogs  AuditLog[]
 
   @@index([email])
+  @@index([clerkId])
 }
 
-model RefreshToken {
-  id        String   @id @default(uuid())
-  token     String   @unique
-  userId    String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  revokedAt DateTime?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([token])
-  @@index([userId])
-}
 
 model Workspace {
   id        String        @id @default(uuid())
