@@ -1,0 +1,593 @@
+// This is your Prisma schema file for TaxPilot
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ======================== ENUMS ========================
+
+enum WorkspaceType {
+  INDIVIDUAL
+  SME
+}
+
+enum TaxReturnStatus {
+  DRAFT
+  PROCESSING
+  VALIDATION_REQUIRED
+  READY_FOR_REVIEW
+  USER_REVIEW
+  APPROVED
+  FILED
+}
+
+enum TaxReturnType {
+  ITR1
+  ITR2
+  ITR3
+  ITR4
+}
+
+enum DocumentStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED
+  VERIFIED
+}
+
+enum DocumentCategory {
+  FORM_16
+  FORM_16A
+  FORM_26AS
+  AIS
+  BANK_STATEMENT
+  INVESTMENT_PROOF
+  RENT_RECEIPT
+  INSURANCE_PREMIUM
+  CAPITAL_GAINS
+  BUSINESS_INCOME
+  SALARY_SLIP
+  INVOICE
+  EXPENSE_RECEIPT
+  OTHER
+}
+
+enum IssueSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum IssueStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum IncomeType {
+  SALARY
+  HOUSE_PROPERTY
+  CAPITAL_GAINS_SHORT
+  CAPITAL_GAINS_LONG
+  BUSINESS
+  OTHER_SOURCES
+  FREELANCE
+}
+
+enum DeductionSection {
+  SEC_80C
+  SEC_80CCD1
+  SEC_80CCD1B
+  SEC_80CCD2
+  SEC_80D
+  SEC_80DD
+  SEC_80DDB
+  SEC_80E
+  SEC_80EE
+  SEC_80EEA
+  SEC_80G
+  SEC_80GG
+  SEC_80TTA
+  SEC_80TTB
+  SEC_80U
+  SEC_24B
+  STANDARD_DEDUCTION
+  HRA
+}
+
+enum TaxRegime {
+  OLD
+  NEW
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  REGISTER
+  DOCUMENT_UPLOAD
+  DOCUMENT_VERIFY
+  DOCUMENT_DELETE
+  CALCULATION
+  VALIDATION
+  ISSUE_RESOLUTION
+  COPILOT_REQUEST
+  REVIEW
+  APPROVAL
+  SETTINGS_CHANGE
+  WORKSPACE_CREATE
+}
+
+enum ComplianceType {
+  GST_RETURN
+  TDS_PAYMENT
+  ADVANCE_TAX
+  ITR_FILING
+  AUDIT
+}
+
+enum ComplianceStatus {
+  PENDING
+  COMPLETED
+  OVERDUE
+  NA
+}
+
+// ======================== MODELS ========================
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  isVerified   Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspaces     Workspace[]
+  refreshTokens  RefreshToken[]
+  auditLogs      AuditLog[]
+
+  @@index([email])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+}
+
+model Workspace {
+  id        String        @id @default(uuid())
+  userId    String
+  name      String
+  type      WorkspaceType
+  pan       String?
+  phone     String?
+  address   String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businesses     Business[]
+  taxReturns     TaxReturn[]
+  documents      Document[]
+  complianceItems ComplianceItem[]
+  auditLogs      AuditLog[]
+  notifications  Notification[]
+
+  @@index([userId])
+}
+
+model Business {
+  id              String   @id @default(uuid())
+  workspaceId     String
+  name            String
+  registrationType String?
+  gstin           String?
+  tan             String?
+  pan             String?
+  incorporationDate DateTime?
+  financialYearStart DateTime?
+  financialYearEnd   DateTime?
+  industry        String?
+  address         String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  expenses     Expense[]
+  transactions Transaction[]
+
+  @@index([workspaceId])
+}
+
+model TaxReturn {
+  id          String          @id @default(uuid())
+  workspaceId String
+  financialYear String
+  assessmentYear String
+  returnType  TaxReturnType   @default(ITR2)
+  status      TaxReturnStatus @default(DRAFT)
+  regime      TaxRegime       @default(NEW)
+  readinessScore Int         @default(0)
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  workspace        Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  incomeEntries    IncomeEntry[]
+  deductions       Deduction[]
+  documents        Document[]
+  taxCalculations  TaxCalculation[]
+  validationIssues ValidationIssue[]
+  taxSavings       TaxSaving[]
+  reviews          Review[]
+  approval         Approval?
+
+  @@index([workspaceId])
+  @@index([status])
+}
+
+model Document {
+  id           String           @id @default(uuid())
+  workspaceId  String
+  taxReturnId  String?
+  name         String
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  storageKey   String
+  category     DocumentCategory @default(OTHER)
+  status       DocumentStatus   @default(PENDING)
+  isVerified   Boolean          @default(false)
+  metadata     Json?
+  processedAt  DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  taxReturn       TaxReturn?       @relation(fields: [taxReturnId], references: [id])
+  pages           DocumentPage[]
+  extractedFields ExtractedField[]
+
+  @@index([workspaceId])
+  @@index([taxReturnId])
+  @@index([status])
+}
+
+model DocumentPage {
+  id         String   @id @default(uuid())
+  documentId String
+  pageNumber Int
+  storageKey String
+  ocrText    String?
+  confidence Float?
+  createdAt  DateTime @default(now())
+
+  document        Document         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  extractedFields ExtractedField[]
+
+  @@index([documentId])
+}
+
+model ExtractedField {
+  id             String   @id @default(uuid())
+  documentId     String
+  documentPageId String?
+  fieldName      String
+  rawValue       String?
+  normalizedValue String?
+  dataType       String?
+  confidence     Float?
+  isVerified     Boolean  @default(false)
+  sourceInfo     Json?
+  createdAt      DateTime @default(now())
+
+  document     Document      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentPage DocumentPage? @relation(fields: [documentPageId], references: [id])
+
+  @@index([documentId])
+}
+
+model IncomeEntry {
+  id           String     @id @default(uuid())
+  taxReturnId  String
+  incomeType   IncomeType
+  source       String
+  amount       Decimal    @db.Decimal(15, 2)
+  tdsDeducted  Decimal?   @db.Decimal(15, 2)
+  assessmentYear String?
+  sourceDocumentId String?
+  notes        String?
+  metadata     Json?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  taxReturn TaxReturn @relation(fields: [taxReturnId], references: [id], onDelete: Cascade)
+
+  @@index([taxReturnId])
+}
+
+model Deduction {
+  id          String           @id @default(uuid())
+  taxReturnId String
+  section     DeductionSection
+  description String
+  claimedAmount Decimal        @db.Decimal(15, 2)
+  eligibleAmount Decimal?      @db.Decimal(15, 2)
+  sourceDocumentId String?
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  taxReturn TaxReturn @relation(fields: [taxReturnId], references: [id], onDelete: Cascade)
+
+  @@index([taxReturnId])
+}
+
+model Expense {
+  id           String   @id @default(uuid())
+  businessId   String
+  category     String
+  description  String
+  amount       Decimal  @db.Decimal(15, 2)
+  date         DateTime
+  vendor       String?
+  isDeductible Boolean  @default(true)
+  gstAmount    Decimal? @db.Decimal(15, 2)
+  invoiceNumber String?
+  sourceDocumentId String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  businessId  String
+  date        DateTime
+  description String
+  amount      Decimal  @db.Decimal(15, 2)
+  type        String
+  category    String?
+  reference   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model TaxCalculation {
+  id              String    @id @default(uuid())
+  taxReturnId     String
+  regime          TaxRegime
+  ruleVersion     String
+  grossIncome     Decimal   @db.Decimal(15, 2)
+  totalDeductions Decimal   @db.Decimal(15, 2)
+  taxableIncome   Decimal   @db.Decimal(15, 2)
+  taxLiability    Decimal   @db.Decimal(15, 2)
+  surcharge       Decimal   @default(0) @db.Decimal(15, 2)
+  cess            Decimal   @default(0) @db.Decimal(15, 2)
+  totalTax        Decimal   @db.Decimal(15, 2)
+  tdsDeducted     Decimal   @default(0) @db.Decimal(15, 2)
+  advanceTaxPaid  Decimal   @default(0) @db.Decimal(15, 2)
+  selfAssessmentTax Decimal @default(0) @db.Decimal(15, 2)
+  refundPayable   Decimal   @db.Decimal(15, 2)
+  inputs          Json
+  calculatedAt    DateTime  @default(now())
+
+  taxReturn TaxReturn          @relation(fields: [taxReturnId], references: [id], onDelete: Cascade)
+  lines     TaxCalculationLine[]
+
+  @@index([taxReturnId])
+}
+
+model TaxCalculationLine {
+  id              String   @id @default(uuid())
+  calculationId   String
+  lineCode        String
+  description     String
+  amount          Decimal  @db.Decimal(15, 2)
+  ruleCode        String?
+  ruleVersion     String?
+  sourceReference String?
+  metadata        Json?
+  sortOrder       Int      @default(0)
+
+  calculation TaxCalculation @relation(fields: [calculationId], references: [id], onDelete: Cascade)
+
+  @@index([calculationId])
+}
+
+model TaxRule {
+  id          String   @id @default(uuid())
+  code        String
+  version     String
+  title       String
+  description String?
+  regime      TaxRegime?
+  category    String
+  parameters  Json
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([code, version])
+  @@index([code])
+  @@index([isActive])
+}
+
+model TaxSaving {
+  id             String   @id @default(uuid())
+  taxReturnId    String
+  section        String
+  description    String
+  currentAmount  Decimal  @db.Decimal(15, 2)
+  maxAllowed     Decimal  @db.Decimal(15, 2)
+  potentialSaving Decimal @db.Decimal(15, 2)
+  eligibilityNote String?
+  priority       Int      @default(1)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  taxReturn TaxReturn @relation(fields: [taxReturnId], references: [id], onDelete: Cascade)
+
+  @@index([taxReturnId])
+}
+
+model ValidationIssue {
+  id          String        @id @default(uuid())
+  taxReturnId String
+  code        String
+  title       String
+  description String
+  severity    IssueSeverity
+  status      IssueStatus   @default(OPEN)
+  field       String?
+  sourceRef   String?
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  taxReturn TaxReturn @relation(fields: [taxReturnId], references: [id], onDelete: Cascade)
+
+  @@index([taxReturnId])
+  @@index([severity])
+  @@index([status])
+}
+
+model ComplianceItem {
+  id          String           @id @default(uuid())
+  workspaceId String
+  type        ComplianceType
+  title       String
+  description String?
+  dueDate     DateTime
+  status      ComplianceStatus @default(PENDING)
+  period      String?
+  amount      Decimal?         @db.Decimal(15, 2)
+  completedAt DateTime?
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([dueDate])
+}
+
+model CopilotConversation {
+  id          String   @id @default(uuid())
+  workspaceId String
+  taxReturnId String?
+  title       String   @default("New Conversation")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages CopilotMessage[]
+
+  @@index([workspaceId])
+}
+
+model CopilotMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  role           String
+  content        String
+  sources        Json?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  conversation CopilotConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+model Review {
+  id          String   @id @default(uuid())
+  taxReturnId String
+  reviewedBy  String
+  notes       String?
+  status      String
+  reviewedAt  DateTime @default(now())
+
+  taxReturn TaxReturn @relation(fields: [taxReturnId], references: [id], onDelete: Cascade)
+
+  @@index([taxReturnId])
+}
+
+model Approval {
+  id           String   @id @default(uuid())
+  taxReturnId  String   @unique
+  approvedBy   String
+  ipAddress    String?
+  approvalHash String
+  notes        String?
+  approvedAt   DateTime @default(now())
+
+  taxReturn TaxReturn @relation(fields: [taxReturnId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id          String      @id @default(uuid())
+  userId      String?
+  workspaceId String?
+  action      AuditAction
+  resource    String?
+  resourceId  String?
+  ipAddress   String?
+  userAgent   String?
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+
+  user      User?      @relation(fields: [userId], references: [id])
+  workspace Workspace? @relation(fields: [workspaceId], references: [id])
+
+  @@index([userId])
+  @@index([workspaceId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  workspaceId String
+  title       String
+  body        String
+  type        String   @default("INFO")
+  isRead      Boolean  @default(false)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([isRead])
+}

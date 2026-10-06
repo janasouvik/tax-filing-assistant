@@ -14,7 +14,7 @@ const NavItem = ({ to, label }: { to: string, label: string }) => (
       <>
         {label}
         <span
-          className={`absolute -bottom-1 left-0 w-full h-[1px] bg-primary transition-transform duration-300 origin-left ${
+          className={`absolute -bottom-1 left-1/2 -translate-x-1/2 w-4/5 h-[1px] bg-primary transition-transform duration-300 ${
             isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
           }`}
         ></span>
@@ -33,7 +33,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3 shrink-0">
           <Link to="/" className="flex items-center gap-3">
             <img src="/icons/Minimal%20TaxPilot%20T%20Monogram%20Icon.png" alt="TaxPilot Logo" className="h-8 w-auto object-contain" />
-            <span className="text-xl font-bold tracking-tight text-on-surface font-serif">TaxPilot</span>
+            <span className="text-lg font-extrabold tracking-tight text-on-surface font-serif">TaxPilot</span>
           </Link>
         </div>
         <nav className="hidden lg:flex items-center gap-7">
