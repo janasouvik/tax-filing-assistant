@@ -123,6 +123,34 @@ enum AuditAction {
   WORKSPACE_CREATE
 }
 
+enum PANVerificationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+  INACTIVE
+  NAME_MISMATCH
+  DOB_MISMATCH
+  SERVICE_UNAVAILABLE
+  SANDBOX
+}
+
+enum AadhaarPanLinkStatus {
+  LINKED
+  NOT_LINKED
+  PENDING
+  FAILED
+  PAN_INOPERATIVE
+  EXEMPT
+  UNKNOWN
+  SERVICE_UNAVAILABLE
+}
+
+enum ResidentialStatus {
+  RESIDENT
+  NON_RESIDENT
+  RESIDENT_BUT_NOT_ORDINARILY_RESIDENT
+}
+
 enum ComplianceType {
   GST_RETURN
   TDS_PAYMENT
@@ -176,6 +204,7 @@ model Workspace {
   complianceItems ComplianceItem[]
   auditLogs      AuditLog[]
   notifications  Notification[]
+  taxpayerProfile TaxpayerProfile?
 
   @@index([userId])
 }
@@ -577,4 +606,74 @@ model Notification {
 
   @@index([workspaceId])
   @@index([isRead])
+}
+
+// ======================== INDIVIDUAL TAXPAYER MODELS ========================
+
+model TaxpayerProfile {
+  id                String            @id @default(uuid())
+  workspaceId       String            @unique
+  assessmentYear    String            @default("2026-27")
+  fullName          String?
+  dateOfBirth       DateTime?
+  mobileNumber      String?
+  email             String?
+  residentialStatus ResidentialStatus @default(RESIDENT)
+  state             String?
+  city              String?
+  pinCode           String?
+  filingStatus      String            @default("DRAFT")
+  onboardingStep    Int               @default(1)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  workspace       Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  panVerification PANVerification?
+  aadhaarPanStatus AadhaarPanStatus?
+
+  @@index([workspaceId])
+}
+
+model PANVerification {
+  id                String               @id @default(uuid())
+  taxpayerProfileId String               @unique
+  pan               String
+  panMasked         String
+  submittedName     String?
+  submittedDob      String?
+  verifiedName      String?
+  verifiedDob       String?
+  panStatus         String?
+  status            PANVerificationStatus @default(PENDING)
+  nameMatch         Boolean?
+  dobMatch          Boolean?
+  isSandbox         Boolean              @default(true)
+  providerReference String?
+  errorCode         String?
+  errorMessage      String?
+  verifiedAt        DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  taxpayerProfile TaxpayerProfile @relation(fields: [taxpayerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([taxpayerProfileId])
+  @@index([pan])
+}
+
+model AadhaarPanStatus {
+  id                String               @id @default(uuid())
+  taxpayerProfileId String               @unique
+  status            AadhaarPanLinkStatus @default(UNKNOWN)
+  isSandbox         Boolean              @default(true)
+  providerReference String?
+  errorCode         String?
+  errorMessage      String?
+  checkedAt         DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  taxpayerProfile TaxpayerProfile @relation(fields: [taxpayerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([taxpayerProfileId])
 }

@@ -19,10 +19,23 @@ import SignUpPage from './pages/SignUpPage';
 import DashboardRouter from './pages/DashboardRouter';
 import Onboarding from './pages/Onboarding';
 
+// ── Individual filing workflow pages ──
+import PersonalProfile from './pages/individual/PersonalProfile';
+import PANVerification from './pages/individual/PANVerification.tsx';
+import AadhaarPANStatus from './pages/individual/AadhaarPANStatus.tsx';
+import ITREligibility from './pages/individual/ITREligibility.tsx';
+import DocumentCollection from './pages/individual/DocumentCollection.tsx';
+import IncomeDeductions from './pages/individual/IncomeDeductions.tsx';
+import TaxCalculation from './pages/individual/TaxCalculation.tsx';
+import ValidationPage from './pages/individual/ValidationPage.tsx';
+import FinalReview from './pages/individual/FinalReview.tsx';
+import FilingReady from './pages/individual/FilingReady.tsx';
+
 function App() {
   return (
     <Router>
       <Routes>
+        {/* ── Existing routes (PRESERVED) ── */}
         <Route path="/smetaxdashboard" element={<SMETaxDashboard />} />
         <Route path="/taxreviewvalidation" element={<TaxReviewValidation />} />
         <Route path="/smes" element={<ForSMEs />} />
@@ -42,6 +55,21 @@ function App() {
         <Route path="/sign-up/*" element={<SignUpPage />} />
         <Route path="/dashboard-router" element={<DashboardRouter />} />
         <Route path="/onboarding" element={<Onboarding />} />
+
+        {/* ── Individual filing workflow (new) ── */}
+        <Route path="/individual" element={<IndividualTaxDashboard />} />
+        <Route path="/individual/profile" element={<PersonalProfile />} />
+        <Route path="/individual/pan" element={<PANVerification />} />
+        <Route path="/individual/aadhaar" element={<AadhaarPANStatus />} />
+        <Route path="/individual/eligibility" element={<ITREligibility />} />
+        <Route path="/individual/documents" element={<DocumentCollection />} />
+        <Route path="/individual/income" element={<IncomeDeductions />} />
+        <Route path="/individual/deductions" element={<IncomeDeductions />} />
+        <Route path="/individual/tax" element={<TaxCalculation />} />
+        <Route path="/individual/validation" element={<ValidationPage />} />
+        <Route path="/individual/review" element={<FinalReview />} />
+        <Route path="/individual/filing" element={<FilingReady />} />
+        <Route path="/individual/everify" element={<FilingReady />} />
       </Routes>
     </Router>
   );
