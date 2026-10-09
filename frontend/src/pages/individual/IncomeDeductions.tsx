@@ -42,7 +42,7 @@ export default function IncomeDeductionsPage() {
   const { getToken } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'income' | 'deductions'>('income');
-  const [workspaceId, setWorkspaceId] = useState<string>('');
+
   const [returnId, setReturnId] = useState<string>('');
   const [incomeEntries, setIncomeEntries] = useState<any[]>([]);
   const [deductions, setDeductions] = useState<any[]>([]);
@@ -67,7 +67,7 @@ export default function IncomeDeductionsPage() {
         const profileData = await profileRes.json();
         const wsId = profileData.data?.workspaceId;
         if (!wsId) { setError('Please complete profile setup'); setLoading(false); return; }
-        setWorkspaceId(wsId);
+
 
         // Get or create tax return
         const returnsRes = await fetch(`${BASE_URL}/api/v1/workspaces/${wsId}/tax-returns`, {
@@ -104,7 +104,8 @@ export default function IncomeDeductionsPage() {
         setLoading(false);
       }
     })();
-  }, [getToken]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
 
   const addIncome = async () => {
     if (!newIncome.source || !newIncome.amount) return;
@@ -185,11 +186,10 @@ export default function IncomeDeductionsPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 text-[14px] font-medium border-b-2 transition-all capitalize ${
-                  activeTab === tab
+                className={`px-6 py-3 text-[14px] font-medium border-b-2 transition-all capitalize ${activeTab === tab
                     ? 'border-primary text-primary'
                     : 'border-transparent text-app-text-muted hover:text-app-text-primary'
-                }`}
+                  }`}
                 type="button"
               >
                 {tab}

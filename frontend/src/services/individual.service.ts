@@ -20,9 +20,24 @@ async function apiRequest<T>(
     },
   });
 
-  const json = await res.json();
+  let json: any = {};
+  const text = await res.text();
+  if (text) {
+    try {
+      json = JSON.parse(text);
+    } catch (err) {
+      if (!res.ok) {
+        if (res.status === 429) {
+          throw Object.assign(new Error('Too many requests. Please wait a moment and try again.'), { code: 'RATE_LIMIT_EXCEEDED', status: 429 });
+        }
+        throw Object.assign(new Error(text || 'An error occurred'), { code: 'UNKNOWN_ERROR', status: res.status });
+      }
+      throw new Error('Invalid JSON response from server');
+    }
+  }
+
   if (!res.ok) {
-    const errMsg = json?.error?.message || 'An error occurred';
+    const errMsg = json?.error?.message || (res.status === 429 ? 'Too many requests. Please wait a moment and try again.' : 'An error occurred');
     const errCode = json?.error?.code || 'UNKNOWN_ERROR';
     throw Object.assign(new Error(errMsg), { code: errCode, status: res.status });
   }
@@ -55,35 +70,58 @@ export interface PANVerification {
   id: string;
   pan: string;
   panMasked: string;
+  // Legacy fields
   submittedName?: string;
   submittedDob?: string;
   verifiedName?: string;
   verifiedDob?: string;
   panStatus?: string;
-  status: 'PENDING' | 'VERIFIED' | 'FAILED' | 'INACTIVE' | 'NAME_MISMATCH' | 'DOB_MISMATCH' | 'SERVICE_UNAVAILABLE' | 'SANDBOX';
+  status: 'PENDING' | 'VERIFIED' | 'FAILED' | 'INACTIVE' | 'NAME_MISMATCH' | 'DOB_MISMATCH' | 'SERVICE_UNAVAILABLE' | 'SANDBOX' | 'NOT_FOUND';
   nameMatch?: boolean;
   dobMatch?: boolean;
+  // New Setu fields
+  category?: string;
+  fullName?: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  aadhaarSeedingStatus?: string | null;
+  verificationProvider?: string;
+  traceId?: string;
+  setuVerification?: string;
+
   isSandbox: boolean;
   errorCode?: string;
   errorMessage?: string;
   verifiedAt?: string;
 }
 
-export interface PANVerificationResult {
-  verified: boolean;
+export interface PANVerificationData {
   pan: string;
-  panMasked: string;
+  category?: string | null;
+  fullName?: string | null;
+  firstName?: string | null;
+  middleName?: string | null;
+  lastName?: string | null;
+  aadhaarSeedingStatus?: string | null;
+}
+
+export interface PANVerificationResult {
+  success: boolean;
+  verification: 'success' | 'failed';
+  message?: string;
+  data?: PANVerificationData;
+  verificationProvider: string;
+  traceId?: string;
+  panVerification: PANVerification;
+  isSandbox?: boolean;
+  pan?: string;
   name?: string;
   dob?: string;
-  status?: string;
   nameMatch?: boolean;
   dobMatch?: boolean;
-  isSandbox: boolean;
-  errorCode?: string;
-  errorMessage?: string;
-  providerReference?: string;
-  verifiedAt?: string;
-  panVerification: PANVerification;
+  status?: string;
+  verified?: boolean;
 }
 
 export type AadhaarPanLinkStatusValue =
@@ -141,7 +179,7 @@ export const individualApi = {
   updateProfile: (getToken: () => Promise<string | null>, data: Partial<TaxpayerProfile>) =>
     apiRequest<TaxpayerProfile>('/individual/profile', { method: 'PUT', body: JSON.stringify(data) }, getToken),
 
-  verifyPan: (getToken: () => Promise<string | null>, data: { pan: string; name: string; dob: string; mobile?: string }) =>
+  verifyPan: (getToken: () => Promise<string | null>, data: { pan: string; name?: string; dob?: string; mobile?: string }) =>
     apiRequest<PANVerificationResult>('/individual/pan/verify', { method: 'POST', body: JSON.stringify(data) }, getToken),
 
   getPanStatus: (getToken: () => Promise<string | null>) =>

@@ -61,7 +61,7 @@ export default function FilingReady() {
         setLoading(false);
       }
     })();
-  }, [getToken]);
+    }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   if (loading) return <IndividualLayout currentStep={11}><LoadingSpinner message="Loading filing status..." /></IndividualLayout>;
 

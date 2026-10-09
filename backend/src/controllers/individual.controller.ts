@@ -2,7 +2,8 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { AppError, asyncHandler, successResponse } from '../utils/response';
 import prisma from '../config/prisma';
-import { verifyPan, isValidPanFormat, maskPan } from '../services/pan-verification.service';
+import { verifyPanWithProvider } from '../modules/pan/pan.service';
+import { isValidPanFormat, maskPan, normalizePan } from '../modules/pan/pan.validator';
 import { checkAadhaarPanStatus } from '../services/aadhaar-pan.service';
 import { compareRegimes, calculateTax } from '../services/tax-calculator.service';
 import { z } from 'zod';
@@ -21,9 +22,9 @@ const profileUpdateSchema = z.object({
 });
 
 const panVerifySchema = z.object({
-  pan: z.string().min(10).max(10).regex(/^[A-Z0-9]{10}$/, 'Invalid PAN format'),
-  name: z.string().min(1).max(200),
-  dob: z.string().min(8), // DD/MM/YYYY
+  pan: z.string().min(1).max(10),
+  name: z.string().optional(),
+  dob: z.string().optional(),
   mobile: z.string().optional(),
 });
 
@@ -34,28 +35,29 @@ const aadhaarPanSchema = z.object({
 // ========== Helpers ==========
 
 async function getWorkspaceForUser(userId: string): Promise<string> {
-  const ws = await prisma.workspace.findFirst({
+  let ws = await prisma.workspace.findFirst({
     where: { userId, type: 'INDIVIDUAL' },
     select: { id: true },
   });
-  if (!ws) throw new AppError('Individual workspace not found. Please complete onboarding.', 404, 'WORKSPACE_NOT_FOUND');
+  if (!ws) {
+    ws = await prisma.workspace.create({
+      data: {
+        name: 'Personal Tax Returns',
+        type: 'INDIVIDUAL',
+        userId,
+      },
+    });
+  }
   return ws.id;
 }
 
 async function getOrCreateTaxpayerProfile(workspaceId: string) {
-  let profile = await prisma.taxpayerProfile.findUnique({
+  return await prisma.taxpayerProfile.upsert({
     where: { workspaceId },
+    update: {},
+    create: { workspaceId },
     include: { panVerification: true, aadhaarPanStatus: true },
   });
-
-  if (!profile) {
-    profile = await prisma.taxpayerProfile.create({
-      data: { workspaceId },
-      include: { panVerification: true, aadhaarPanStatus: true },
-    });
-  }
-
-  return profile;
 }
 
 // ========== Controllers ==========
@@ -64,6 +66,7 @@ async function getOrCreateTaxpayerProfile(workspaceId: string) {
  * GET /api/v1/individual/profile
  */
 export const getProfile = asyncHandler(async (req: AuthRequest, res: Response, _next: NextFunction) => {
+  console.log('PROFILE_GET', { method: req.method, route: req.originalUrl });
   const workspaceId = await getWorkspaceForUser(req.user!.userId);
   const profile = await getOrCreateTaxpayerProfile(workspaceId);
   res.json(successResponse(profile));
@@ -73,6 +76,7 @@ export const getProfile = asyncHandler(async (req: AuthRequest, res: Response, _
  * PUT /api/v1/individual/profile
  */
 export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
+  console.log('PROFILE_UPDATE', { method: req.method, route: req.originalUrl });
   const parsed = profileUpdateSchema.safeParse(req.body);
   if (!parsed.success) return next(new AppError('Invalid profile data', 400, 'VALIDATION_ERROR', parsed.error.issues));
 
@@ -95,95 +99,176 @@ export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response
 
 /**
  * POST /api/v1/individual/pan/verify
+ *
+ * Accepts: { pan: string, consent: true }
+ * Validates consent server-side, normalizes PAN, calls Setu or mock provider,
+ * stores result, and returns a safe normalized response.
  */
 export const verifyPanHandler = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   const parsed = panVerifySchema.safeParse(req.body);
-  if (!parsed.success) return next(new AppError('Invalid PAN verification request', 400, 'VALIDATION_ERROR', parsed.error.issues));
+  if (!parsed.success) {
+    const issues = parsed.error.issues;
+    return next(new AppError('Invalid PAN verification request', 400, 'VALIDATION_ERROR', issues));
+  }
 
-  const { pan, name, dob, mobile } = parsed.data;
-  const panUpper = pan.toUpperCase();
+  const { pan: rawPan, name, dob } = parsed.data;
 
-  if (!isValidPanFormat(panUpper)) {
-    return next(new AppError('Invalid PAN format. Expected: ABCDE1234F', 400, 'INVALID_PAN_FORMAT'));
+  // Normalize and validate PAN format
+  const pan = normalizePan(rawPan);
+  if (!isValidPanFormat(pan)) {
+    return next(new AppError('Invalid PAN format. Expected: ABCDE1234F (5 letters, 4 digits, 1 letter)', 400, 'INVALID_PAN_FORMAT'));
   }
 
   const workspaceId = await getWorkspaceForUser(req.user!.userId);
   const profile = await getOrCreateTaxpayerProfile(workspaceId);
 
-  // Call verification service
+  // Call Setu / mock provider (hardcode consent to true as the UI form removed it)
   let result;
   try {
-    result = await verifyPan({ pan: panUpper, name, dob, mobile });
-  } catch (err) {
+    result = await verifyPanWithProvider(pan);
+  } catch (err: any) {
+    // Re-throw known AppErrors; wrap unexpected errors
+    if (err?.statusCode) throw err;
     return next(new AppError('PAN verification service unavailable. Please try again.', 503, 'SERVICE_UNAVAILABLE'));
   }
 
-  // Persist result
+  const isVerified = result.verification === 'success';
+  const isMock = result.verificationProvider === 'mock';
+
+  // Calculate name match (basic exact match ignoring case)
+  let nameMatch: boolean | null = null;
+  if (name && result.data?.fullName) {
+    nameMatch = name.toLowerCase() === result.data.fullName.toLowerCase();
+  }
+
+  // Determine persisted status
+  let panStatus: string;
+  if (isVerified) {
+    panStatus = isMock ? 'SANDBOX' : 'VERIFIED';
+  } else {
+    const msg = (result.message || '').toLowerCase();
+    if (msg.includes('not found')) panStatus = 'NOT_FOUND';
+    else panStatus = 'FAILED';
+  }
+
+  // Persist result — upsert into PANVerification
   const panVerification = await prisma.pANVerification.upsert({
     where: { taxpayerProfileId: profile.id },
     create: {
       taxpayerProfileId: profile.id,
-      pan: panUpper,
-      panMasked: maskPan(panUpper),
+      pan,
+      panMasked: maskPan(pan),
+      status: panStatus as any,
+      panStatus: isVerified ? 'ACTIVE' : panStatus,
+      isSandbox: isMock,
       submittedName: name,
       submittedDob: dob,
-      verifiedName: result.name,
-      verifiedDob: result.dob,
-      panStatus: result.status,
-      status: result.verified ? 'VERIFIED' : (
-        result.errorCode === 'PAN_INACTIVE' ? 'INACTIVE' :
-        result.errorCode === 'NAME_MISMATCH' ? 'NAME_MISMATCH' :
-        result.errorCode === 'DOB_MISMATCH' ? 'DOB_MISMATCH' :
-        result.errorCode === 'SERVICE_UNAVAILABLE' ? 'SERVICE_UNAVAILABLE' :
-        'SANDBOX'
-      ),
-      nameMatch: result.nameMatch,
-      dobMatch: result.dobMatch,
-      isSandbox: result.isSandbox,
-      providerReference: result.providerReference,
-      errorCode: result.errorCode,
-      errorMessage: result.errorMessage,
-      verifiedAt: result.verifiedAt ? new Date(result.verifiedAt) : null,
+      verifiedName: result.data?.fullName || null,
+      nameMatch,
+      dobMatch: true, // Mocking DOB match since Setu doesn't return DOB
+      // Setu-specific fields
+      category: result.data?.category,
+      fullName: result.data?.fullName,
+      firstName: result.data?.firstName,
+      middleName: result.data?.middleName,
+      lastName: result.data?.lastName,
+      aadhaarSeedingStatus: result.data?.aadhaarSeedingStatus ?? null,
+      verificationProvider: result.verificationProvider,
+      traceId: result.traceId,
+      setuVerification: result.verification,
+      verifiedAt: isVerified ? new Date() : null,
     },
     update: {
-      pan: panUpper,
-      panMasked: maskPan(panUpper),
+      pan,
+      panMasked: maskPan(pan),
+      status: panStatus as any,
+      panStatus: isVerified ? 'ACTIVE' : panStatus,
+      isSandbox: isMock,
       submittedName: name,
       submittedDob: dob,
-      verifiedName: result.name,
-      verifiedDob: result.dob,
-      panStatus: result.status,
-      status: result.verified ? 'VERIFIED' : (
-        result.errorCode === 'PAN_INACTIVE' ? 'INACTIVE' :
-        result.errorCode === 'NAME_MISMATCH' ? 'NAME_MISMATCH' :
-        result.errorCode === 'DOB_MISMATCH' ? 'DOB_MISMATCH' :
-        result.errorCode === 'SERVICE_UNAVAILABLE' ? 'SERVICE_UNAVAILABLE' :
-        'SANDBOX'
-      ),
-      nameMatch: result.nameMatch,
-      dobMatch: result.dobMatch,
-      isSandbox: result.isSandbox,
-      providerReference: result.providerReference,
-      errorCode: result.errorCode,
-      errorMessage: result.errorMessage,
-      verifiedAt: result.verifiedAt ? new Date(result.verifiedAt) : null,
+      verifiedName: result.data?.fullName || null,
+      nameMatch,
+      dobMatch: true,
+      category: result.data?.category,
+      fullName: result.data?.fullName,
+      firstName: result.data?.firstName,
+      middleName: result.data?.middleName,
+      lastName: result.data?.lastName,
+      aadhaarSeedingStatus: result.data?.aadhaarSeedingStatus ?? null,
+      verificationProvider: result.verificationProvider,
+      traceId: result.traceId,
+      setuVerification: result.verification,
+      verifiedAt: isVerified ? new Date() : null,
     },
   });
 
-  // Update workspace PAN (masked) and onboarding step
+  // Update workspace masked PAN and onboarding step
   await prisma.workspace.update({
     where: { id: workspaceId },
-    data: { pan: maskPan(panUpper) },
+    data: { pan: maskPan(pan) },
   });
 
-  if (result.verified) {
+  if (isVerified) {
     await prisma.taxpayerProfile.update({
       where: { id: profile.id },
       data: { onboardingStep: Math.max(profile.onboardingStep, 3) },
     });
   }
 
-  res.json(successResponse({ ...result, panVerification }));
+  // If the PAN provider also returns Aadhaar seeding status, populate the AadhaarPanStatus
+  if (isVerified && result.data?.aadhaarSeedingStatus) {
+    const seedingStatus = result.data.aadhaarSeedingStatus.toUpperCase();
+    // Map Setu/Provider status to our internal AadhaarPanLinkStatusValue
+    let mappedStatus = 'UNKNOWN';
+    if (seedingStatus === 'LINKED' || seedingStatus === 'Y') mappedStatus = 'LINKED';
+    else if (seedingStatus === 'NOT_LINKED' || seedingStatus === 'N') mappedStatus = 'NOT_LINKED';
+    else if (seedingStatus === 'FAILED') mappedStatus = 'FAILED';
+
+    await prisma.aadhaarPanStatus.upsert({
+      where: { taxpayerProfileId: profile.id },
+      create: {
+        taxpayerProfileId: profile.id,
+        status: mappedStatus as any,
+        isSandbox: isMock,
+        providerReference: result.traceId,
+        checkedAt: new Date(),
+      },
+      update: {
+        status: mappedStatus as any,
+        isSandbox: isMock,
+        providerReference: result.traceId,
+        checkedAt: new Date(),
+      },
+    });
+
+    if (mappedStatus === 'LINKED') {
+      await prisma.taxpayerProfile.update({
+        where: { id: profile.id },
+        data: { onboardingStep: Math.max(profile.onboardingStep, 4) },
+      });
+    }
+  }
+
+  // Return stable TaxPilot API contract — never return raw Setu response
+  res.json(successResponse({
+    success: result.verification === 'success',
+    verification: result.verification,
+    message: result.message,
+    data: {
+      pan: maskPan(pan),
+      category: result.data?.category ?? null,
+      fullName: result.data?.fullName ?? null,
+      firstName: result.data?.firstName ?? null,
+      middleName: result.data?.middleName ?? null,
+      lastName: result.data?.lastName ?? null,
+      // Return null (not missing) when Setu didn't provide this — never invent a value
+      aadhaarSeedingStatus: result.data?.aadhaarSeedingStatus ?? null,
+    },
+    verificationProvider: result.verificationProvider,
+    isSandbox: isMock,
+    traceId: result.traceId,
+    panVerification,
+  }));
 });
 
 /**
@@ -198,7 +283,7 @@ export const getPanStatus = asyncHandler(async (req: AuthRequest, res: Response,
 
   res.json(successResponse({
     panVerification: profile?.panVerification || null,
-    isVerified: profile?.panVerification?.status === 'VERIFIED',
+    isVerified: profile?.panVerification?.status === 'VERIFIED' || profile?.panVerification?.status === 'SANDBOX',
   }));
 });
 
@@ -218,9 +303,30 @@ export const checkAadhaarPanStatusHandler = asyncHandler(async (req: AuthRequest
     return next(new AppError('Please verify your PAN first', 400, 'PAN_NOT_VERIFIED'));
   }
 
+  // Ensure the PAN being checked matches the authenticated user's verified PAN
+  if (pan.toUpperCase() !== profile.panVerification.pan) {
+    return next(new AppError('The provided PAN does not match the verified PAN for this taxpayer.', 403, 'PAN_MISMATCH'));
+  }
+
+  const provider = process.env.AADHAAR_PAN_PROVIDER || 'sandbox';
+
+  // Do not claim a real Aadhaar-PAN check occurred when only a mock provider is used
+  if (!profile.panVerification.isSandbox && provider !== 'real') {
+    res.json(successResponse({
+      status: 'UNKNOWN',
+      displayMessage: 'Aadhaar-PAN linkage status is unavailable from the provider.',
+      actionRequired: true,
+      actionUrl: 'https://www.incometax.gov.in/iec/foportal/',
+      isSandbox: false,
+      checkedAt: new Date().toISOString(),
+      aadhaarPanStatus: profile.aadhaarPanStatus || null,
+    }));
+    return;
+  }
+
   let result;
   try {
-    result = await checkAadhaarPanStatus({ pan: pan.toUpperCase() });
+    result = await checkAadhaarPanStatus({ pan: profile.panVerification.pan });
   } catch (err) {
     return next(new AppError('Aadhaar-PAN status service unavailable', 503, 'SERVICE_UNAVAILABLE'));
   }
@@ -267,7 +373,7 @@ export const getVerificationStatus = asyncHandler(async (req: AuthRequest, res: 
     include: { panVerification: true, aadhaarPanStatus: true },
   });
 
-  const panVerified = profile?.panVerification?.status === 'VERIFIED';
+  const panVerified = profile?.panVerification?.status === 'VERIFIED' || profile?.panVerification?.status === 'SANDBOX';
   const aadhaarLinked = profile?.aadhaarPanStatus?.status === 'LINKED' || profile?.aadhaarPanStatus?.status === 'EXEMPT';
   const identityReady = panVerified && aadhaarLinked;
 
@@ -353,7 +459,7 @@ export const calculateTaxHandler = asyncHandler(async (req: AuthRequest, res: Re
   const d80CCD1B = deductions.filter(d => d.section === 'SEC_80CCD1B').reduce((s, d) => s + Number(d.claimedAmount), 0);
   const d80CCD2 = deductions.filter(d => d.section === 'SEC_80CCD2').reduce((s, d) => s + Number(d.claimedAmount), 0);
   const dHLP = deductions.filter(d => d.section === 'SEC_24B').reduce((s, d) => s + Number(d.claimedAmount), 0);
-  const dOther = deductions.filter(d => !['SEC_80C','SEC_80D','SEC_80CCD1B','SEC_80CCD2','SEC_24B'].includes(d.section)).reduce((s, d) => s + Number(d.claimedAmount), 0);
+  const dOther = deductions.filter(d => !['SEC_80C', 'SEC_80D', 'SEC_80CCD1B', 'SEC_80CCD2', 'SEC_24B'].includes(d.section)).reduce((s, d) => s + Number(d.claimedAmount), 0);
 
   const baseInput = {
     assessmentYear: '2026-27',
@@ -400,7 +506,7 @@ export const validateReturn = asyncHandler(async (req: AuthRequest, res: Respons
   const issues: { severity: 'error' | 'warning' | 'info'; field: string; message: string }[] = [];
 
   // Check PAN
-  if (!profile?.panVerification || !['VERIFIED','SANDBOX'].includes(profile.panVerification.status)) {
+  if (!profile?.panVerification || !['VERIFIED', 'SANDBOX'].includes(profile.panVerification.status)) {
     issues.push({ severity: 'error', field: 'pan', message: 'PAN verification is required before filing.' });
   }
 

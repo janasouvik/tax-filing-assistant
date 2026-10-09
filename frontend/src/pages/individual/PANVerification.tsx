@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IndividualLayout } from './PersonalProfile';
-import { StatusBadge, SandboxBanner, LoadingSpinner, InlineError } from '../../components/individual/SharedComponents';
+import { StatusBadge, SandboxBanner, InlineError } from '../../components/individual/SharedComponents';
 import { individualApi } from '../../services/individual.service';
 import type { PANVerificationResult } from '../../services/individual.service';
 
@@ -25,7 +25,7 @@ export default function PANVerificationPage() {
   const [result, setResult] = useState<PANVerificationResult | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [existingStatus, setExistingStatus] = useState<'VERIFIED' | 'SANDBOX' | null>(null);
+
 
   // Load existing PAN status
   useEffect(() => {
@@ -34,27 +34,28 @@ export default function PANVerificationPage() {
         const status = await individualApi.getPanStatus(getToken);
         if (status.panVerification) {
           const pv = status.panVerification;
-          if (pv.status === 'VERIFIED' || pv.status === 'SANDBOX') {
-            setExistingStatus(pv.status);
-            setPan(pv.pan || '');
-            setName(pv.submittedName || '');
-            setDob(pv.submittedDob || '');
-            // Build result-like object to show success state
-            setResult({
-              verified: true,
-              pan: pv.pan,
-              panMasked: pv.panMasked,
-              name: pv.verifiedName,
-              dob: pv.verifiedDob,
-              status: pv.panStatus,
-              nameMatch: pv.nameMatch ?? true,
-              dobMatch: pv.dobMatch ?? true,
-              isSandbox: pv.isSandbox,
-              verifiedAt: pv.verifiedAt,
-              panVerification: pv,
-            });
-            setState('success');
-          }
+            if (pv.status === 'VERIFIED' || pv.status === 'SANDBOX') {
+
+              setPan(pv.pan || '');
+              setName(pv.submittedName || '');
+              setDob(pv.submittedDob || '');
+              // Build result-like object to show success state
+              setResult({
+                success: true,
+                verification: 'success',
+                verificationProvider: pv.verificationProvider || 'unknown',
+                panVerification: pv as any,
+                verified: true,
+                pan: pv.pan,
+                name: pv.verifiedName || undefined,
+                dob: pv.verifiedDob || undefined,
+                status: pv.panStatus || undefined,
+                nameMatch: pv.nameMatch ?? true,
+                dobMatch: pv.dobMatch ?? true,
+                isSandbox: pv.isSandbox,
+              });
+              setState('success');
+            }
         }
       } catch {
         // Not yet verified — that's OK
@@ -74,6 +75,7 @@ export default function PANVerificationPage() {
   };
 
   const handleVerify = async () => {
+    if (state === 'loading') return;
     if (!validateForm()) return;
     setState('loading');
     setErrorMsg('');
@@ -89,8 +91,18 @@ export default function PANVerificationPage() {
         dob: dobFormatted,
         mobile: mobile.trim() || undefined,
       });
+      
+      if (!res.success) {
+        setErrorMsg(res.message || 'PAN verification failed. Please check the details and try again.');
+        setState('error');
+        return;
+      }
+      
       setResult(res);
       setState('success');
+      
+      // Automatically navigate to the next step
+      setTimeout(() => navigate('/individual/aadhaar'), 1500);
     } catch (err: any) {
       setErrorMsg(err.message || 'PAN verification failed. Please try again.');
       setState('error');
@@ -101,7 +113,6 @@ export default function PANVerificationPage() {
     setState('idle');
     setResult(null);
     setErrorMsg('');
-    setExistingStatus(null);
   };
 
   return (
@@ -144,7 +155,7 @@ export default function PANVerificationPage() {
               <div className="grid grid-cols-2 gap-4 text-[14px]">
                 <div>
                   <p className="text-[12px] text-app-text-muted uppercase tracking-wider font-semibold mb-1">PAN</p>
-                  <p className="font-mono text-app-text-primary text-[16px] font-medium">{maskPanDisplay(result.pan)}</p>
+                  <p className="font-mono text-app-text-primary text-[16px] font-medium">{maskPanDisplay(result.pan || pan)}</p>
                 </div>
                 <div>
                   <p className="text-[12px] text-app-text-muted uppercase tracking-wider font-semibold mb-1">PAN Status</p>
@@ -204,8 +215,6 @@ export default function PANVerificationPage() {
         {/* ========== INPUT STATE ========== */}
         {state !== 'success' && (
           <div className="space-y-6">
-            {state === 'loading' && <LoadingSpinner message="Verifying PAN..." />}
-
             {state === 'error' && (
               <InlineError
                 message={errorMsg}
@@ -213,9 +222,7 @@ export default function PANVerificationPage() {
               />
             )}
 
-            {state !== 'loading' && (
-              <>
-                <div className="space-y-5">
+            <div className="space-y-5">
                   {/* PAN */}
                   <div>
                     <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="pan">
@@ -228,10 +235,12 @@ export default function PANVerificationPage() {
                       onChange={e => {
                         setPan(e.target.value.toUpperCase());
                         if (fieldErrors.pan) setFieldErrors(p => ({ ...p, pan: '' }));
+                        if (state === 'error') setState('idle');
                       }}
                       placeholder="ABCDE1234F"
                       maxLength={10}
-                      className={`w-full font-mono px-3.5 py-2.5 rounded-lg border text-[16px] bg-white text-app-text-primary placeholder-app-text-muted outline-none uppercase tracking-widest transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${fieldErrors.pan ? 'border-app-error' : 'border-app-border'}`}
+                      disabled={state === 'loading'}
+                      className={`w-full font-mono px-3.5 py-2.5 rounded-lg border text-[16px] bg-white text-app-text-primary placeholder-app-text-muted outline-none uppercase tracking-widest transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60 disabled:bg-gray-50 ${fieldErrors.pan ? 'border-app-error' : 'border-app-border'}`}
                     />
                     {fieldErrors.pan && <p className="mt-1 text-[12px] text-app-error">{fieldErrors.pan}</p>}
                     <p className="mt-1 text-[12px] text-app-text-muted">Format: 5 letters, 4 digits, 1 letter (e.g. ABCDE1234F)</p>
@@ -249,9 +258,11 @@ export default function PANVerificationPage() {
                       onChange={e => {
                         setName(e.target.value);
                         if (fieldErrors.name) setFieldErrors(p => ({ ...p, name: '' }));
+                        if (state === 'error') setState('idle');
                       }}
                       placeholder="Your full legal name"
-                      className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white text-app-text-primary placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${fieldErrors.name ? 'border-app-error' : 'border-app-border'}`}
+                      disabled={state === 'loading'}
+                      className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white text-app-text-primary placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60 disabled:bg-gray-50 ${fieldErrors.name ? 'border-app-error' : 'border-app-border'}`}
                     />
                     {fieldErrors.name && <p className="mt-1 text-[12px] text-app-error">{fieldErrors.name}</p>}
                   </div>
@@ -268,9 +279,11 @@ export default function PANVerificationPage() {
                       onChange={e => {
                         setDob(e.target.value);
                         if (fieldErrors.dob) setFieldErrors(p => ({ ...p, dob: '' }));
+                        if (state === 'error') setState('idle');
                       }}
                       max={new Date().toISOString().slice(0, 10)}
-                      className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white text-app-text-primary outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${fieldErrors.dob ? 'border-app-error' : 'border-app-border'}`}
+                      disabled={state === 'loading'}
+                      className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white text-app-text-primary outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60 disabled:bg-gray-50 ${fieldErrors.dob ? 'border-app-error' : 'border-app-border'}`}
                     />
                     {fieldErrors.dob && <p className="mt-1 text-[12px] text-app-error">{fieldErrors.dob}</p>}
                   </div>
@@ -286,10 +299,14 @@ export default function PANVerificationPage() {
                         id="panMobile"
                         type="tel"
                         value={mobile}
-                        onChange={e => setMobile(e.target.value)}
+                        onChange={e => {
+                          setMobile(e.target.value);
+                          if (state === 'error') setState('idle');
+                        }}
                         placeholder="10-digit mobile"
                         maxLength={10}
-                        className="flex-1 px-3.5 py-2.5 rounded-r-lg border border-app-border text-[14px] bg-white text-app-text-primary placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+                        disabled={state === 'loading'}
+                        className="flex-1 px-3.5 py-2.5 rounded-r-lg border border-app-border text-[14px] bg-white text-app-text-primary placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60 disabled:bg-gray-50"
                       />
                     </div>
                   </div>
@@ -305,7 +322,8 @@ export default function PANVerificationPage() {
                 <div className="flex items-center justify-between pt-2">
                   <button
                     onClick={() => navigate('/individual/profile')}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[14px] font-medium transition-all"
+                    disabled={state === 'loading'}
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[14px] font-medium transition-all disabled:opacity-50"
                     type="button"
                   >
                     <span className="material-symbols-outlined text-[16px]">arrow_back</span>
@@ -313,15 +331,23 @@ export default function PANVerificationPage() {
                   </button>
                   <button
                     onClick={handleVerify}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary hover:bg-[#52321c] text-white text-[14px] font-medium transition-all shadow-sm"
+                    disabled={state === 'loading'}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary hover:bg-[#52321c] text-white text-[14px] font-medium transition-all shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
                     type="button"
                   >
-                    <span className="material-symbols-outlined text-[16px]">verified_user</span>
-                    Verify PAN
+                    {state === 'loading' ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        Verifying...
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[16px]">verified_user</span>
+                        Verify PAN
+                      </>
+                    )}
                   </button>
                 </div>
-              </>
-            )}
           </div>
         )}
       </div>

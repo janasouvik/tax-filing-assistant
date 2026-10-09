@@ -6,7 +6,7 @@ import { useAuth } from '@clerk/react';
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { IndividualLayout } from './PersonalProfile';
-import { StatusBadge, LoadingSpinner, InlineError } from '../../components/individual/SharedComponents';
+import { LoadingSpinner, InlineError } from '../../components/individual/SharedComponents';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
 

@@ -8,23 +8,20 @@
  * - FilingReadinessCard
  * - SandboxBanner
  */
-
-import React from 'react';
-
 // ========== StatusBadge ==========
 
 type BadgeVariant = 'verified' | 'pending' | 'action-required' | 'failed' | 'processing' | 'linked' | 'exempt' | 'unknown' | 'sandbox';
 
 const BADGE_CONFIG: Record<BadgeVariant, { icon: string; label: string; classes: string }> = {
-  verified:          { icon: 'check_circle', label: 'Verified',         classes: 'bg-app-success-bg text-app-success border-app-success/20' },
-  linked:            { icon: 'check_circle', label: 'Linked',           classes: 'bg-app-success-bg text-app-success border-app-success/20' },
-  pending:           { icon: 'schedule',     label: 'Pending',          classes: 'bg-app-warning-bg text-app-warning border-app-warning/20' },
-  'action-required': { icon: 'warning',      label: 'Action Required',  classes: 'bg-[#FEF3EC] text-[#C2410C] border-[#C2410C]/20' },
-  failed:            { icon: 'cancel',       label: 'Failed',           classes: 'bg-[#FFF1F0] text-app-error border-app-error/20' },
-  processing:        { icon: 'sync',         label: 'Processing',       classes: 'bg-blue-50 text-blue-700 border-blue-200' },
-  exempt:            { icon: 'info',         label: 'Exempt',           classes: 'bg-app-success-bg text-app-success border-app-success/20' },
-  unknown:           { icon: 'help_outline', label: 'Unknown',          classes: 'bg-gray-50 text-gray-600 border-gray-200' },
-  sandbox:           { icon: 'science',      label: 'Demo / Sandbox',   classes: 'bg-purple-50 text-purple-700 border-purple-200' },
+  verified: { icon: 'check_circle', label: 'Verified', classes: 'bg-app-success-bg text-app-success border-app-success/20' },
+  linked: { icon: 'check_circle', label: 'Linked', classes: 'bg-app-success-bg text-app-success border-app-success/20' },
+  pending: { icon: 'schedule', label: 'Pending', classes: 'bg-app-warning-bg text-app-warning border-app-warning/20' },
+  'action-required': { icon: 'warning', label: 'Action Required', classes: 'bg-[#FEF3EC] text-[#C2410C] border-[#C2410C]/20' },
+  failed: { icon: 'cancel', label: 'Failed', classes: 'bg-[#FFF1F0] text-app-error border-app-error/20' },
+  processing: { icon: 'sync', label: 'Processing', classes: 'bg-blue-50 text-blue-700 border-blue-200' },
+  exempt: { icon: 'info', label: 'Exempt', classes: 'bg-app-success-bg text-app-success border-app-success/20' },
+  unknown: { icon: 'help_outline', label: 'Unknown', classes: 'bg-gray-50 text-gray-600 border-gray-200' },
+  sandbox: { icon: 'science', label: 'Demo / Sandbox', classes: 'bg-purple-50 text-purple-700 border-purple-200' },
 };
 
 interface StatusBadgeProps {
@@ -60,18 +57,18 @@ export interface FilingStep {
 }
 
 export const FILING_STEPS: Omit<FilingStep, 'status'>[] = [
-  { id: 1,  label: 'Personal Profile',       shortLabel: 'Profile',     path: '/individual/profile' },
-  { id: 2,  label: 'PAN Verification',       shortLabel: 'PAN',         path: '/individual/pan' },
-  { id: 3,  label: 'Aadhaar–PAN Status',     shortLabel: 'Aadhaar',     path: '/individual/aadhaar' },
-  { id: 4,  label: 'ITR Eligibility',        shortLabel: 'Eligibility', path: '/individual/eligibility' },
-  { id: 5,  label: 'Documents',              shortLabel: 'Documents',   path: '/individual/documents' },
-  { id: 6,  label: 'Income',                 shortLabel: 'Income',      path: '/individual/income' },
-  { id: 7,  label: 'Deductions',             shortLabel: 'Deductions',  path: '/individual/deductions' },
-  { id: 8,  label: 'Tax Calculation',        shortLabel: 'Tax',         path: '/individual/tax' },
-  { id: 9,  label: 'Validation',             shortLabel: 'Validation',  path: '/individual/validation' },
-  { id: 10, label: 'Final Review',           shortLabel: 'Review',      path: '/individual/review' },
-  { id: 11, label: 'Filing',                 shortLabel: 'File',        path: '/individual/filing' },
-  { id: 12, label: 'e-Verification',         shortLabel: 'Verify',      path: '/individual/everify' },
+  { id: 1, label: 'Personal Profile', shortLabel: 'Profile', path: '/individual/profile' },
+  { id: 2, label: 'PAN Verification', shortLabel: 'PAN', path: '/individual/pan' },
+  { id: 3, label: 'Aadhaar–PAN Status', shortLabel: 'Aadhaar', path: '/individual/aadhaar' },
+  { id: 4, label: 'ITR Eligibility', shortLabel: 'Eligibility', path: '/individual/eligibility' },
+  { id: 5, label: 'Documents', shortLabel: 'Documents', path: '/individual/documents' },
+  { id: 6, label: 'Income', shortLabel: 'Income', path: '/individual/income' },
+  { id: 7, label: 'Deductions', shortLabel: 'Deductions', path: '/individual/deductions' },
+  { id: 8, label: 'Tax Calculation', shortLabel: 'Tax', path: '/individual/tax' },
+  { id: 9, label: 'Validation', shortLabel: 'Validation', path: '/individual/validation' },
+  { id: 10, label: 'Final Review', shortLabel: 'Review', path: '/individual/review' },
+  { id: 11, label: 'Filing', shortLabel: 'File', path: '/individual/filing' },
+  { id: 12, label: 'e-Verification', shortLabel: 'Verify', path: '/individual/everify' },
 ];
 
 interface FileStepperProps {
@@ -108,9 +105,9 @@ export function FilingStepper({ currentStep, completedSteps = [], errorSteps = [
                 {/* Circle indicator */}
                 <div className={`relative w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold border-2 transition-all
                   ${status === 'completed' ? 'bg-app-success border-app-success text-white' : ''}
-                  ${status === 'current'   ? 'bg-primary border-primary text-white shadow-sm' : ''}
-                  ${status === 'pending'   ? 'bg-white border-app-border text-app-text-muted' : ''}
-                  ${status === 'error'     ? 'bg-app-error border-app-error text-white' : ''}
+                  ${status === 'current' ? 'bg-primary border-primary text-white shadow-sm' : ''}
+                  ${status === 'pending' ? 'bg-white border-app-border text-app-text-muted' : ''}
+                  ${status === 'error' ? 'bg-app-error border-app-error text-white' : ''}
                 `}>
                   {status === 'completed' && (
                     <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>
@@ -122,10 +119,10 @@ export function FilingStepper({ currentStep, completedSteps = [], errorSteps = [
                 </div>
                 {/* Label */}
                 <span className={`text-[10px] font-medium text-center leading-tight whitespace-nowrap max-w-[52px] truncate
-                  ${status === 'current'   ? 'text-primary font-semibold' : ''}
+                  ${status === 'current' ? 'text-primary font-semibold' : ''}
                   ${status === 'completed' ? 'text-app-success' : ''}
-                  ${status === 'pending'   ? 'text-app-text-muted' : ''}
-                  ${status === 'error'     ? 'text-app-error' : ''}
+                  ${status === 'pending' ? 'text-app-text-muted' : ''}
+                  ${status === 'error' ? 'text-app-error' : ''}
                 `}>
                   {step.shortLabel}
                 </span>
@@ -161,9 +158,10 @@ interface TaxpayerVerificationCardProps {
 }
 
 function getPanBadge(status: PANStatusValue): BadgeVariant {
-  if (status === 'VERIFIED') return 'verified';
-  if (status === 'PENDING' || status === 'SANDBOX') return 'pending';
+  if (status === 'VERIFIED' || status === 'SANDBOX') return 'verified';
+  if (status === 'PENDING') return 'pending';
   if (status === 'INACTIVE') return 'action-required';
+  if (status === 'FAILED') return 'failed';
   return 'pending';
 }
 
@@ -218,7 +216,7 @@ export function TaxpayerVerificationCard({
               <p className="text-[12px] text-app-text-secondary mt-0.5">Name & DOB matched</p>
             )}
           </div>
-          <StatusBadge variant={getPanBadge(panStatus)} label={panStatus === 'VERIFIED' ? 'Verified' : (panStatus || 'Pending')} size="sm" />
+          <StatusBadge variant={getPanBadge(panStatus)} label={panStatus === 'VERIFIED' ? 'Verified' : panStatus === 'SANDBOX' ? 'Verified (Sandbox)' : (panStatus || 'Pending')} size="sm" />
         </div>
 
         <div className="border-t border-app-border-light" />
@@ -230,10 +228,10 @@ export function TaxpayerVerificationCard({
             {aadhaarStatus && (
               <p className="text-[12px] text-app-text-secondary mt-0.5">
                 {aadhaarLinked ? 'Your PAN and Aadhaar are linked' :
-                 aadhaarStatus === 'PENDING' ? 'Link request is under validation' :
-                 aadhaarStatus === 'NOT_LINKED' ? 'Linkage required — resolve on IT portal' :
-                 aadhaarStatus === 'PAN_INOPERATIVE' ? 'PAN appears inoperative' :
-                 'Status unknown'}
+                  aadhaarStatus === 'PENDING' ? 'Link request is under validation' :
+                    aadhaarStatus === 'NOT_LINKED' ? 'Linkage required — resolve on IT portal' :
+                      aadhaarStatus === 'PAN_INOPERATIVE' ? 'PAN appears inoperative' :
+                        'Status unknown'}
               </p>
             )}
           </div>

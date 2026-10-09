@@ -92,7 +92,9 @@ async function mockAadhaarPanStatus(req: AadhaarPanStatusRequest): Promise<Aadha
   // Simulate different statuses based on PAN patterns for testing
   let status: AadhaarPanLinkStatusValue = 'LINKED';
 
-  if (pan.charAt(4) === 'C') {
+  if (pan === 'ABCDE1234A') {
+    status = 'LINKED';
+  } else if (pan.charAt(4) === 'C') {
     status = 'NOT_LINKED';
   } else if (pan.charAt(4) === 'D') {
     status = 'PENDING';

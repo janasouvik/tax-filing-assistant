@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/react';
 import { useEffect, useState, useCallback } from 'react';
 import Navbar from '../components/Navbar';
-import { TaxpayerVerificationCard, FilingReadinessCard, StatusBadge, LoadingSpinner } from '../components/individual/SharedComponents';
+import { TaxpayerVerificationCard, StatusBadge, LoadingSpinner } from '../components/individual/SharedComponents';
 import { individualApi, type VerificationStatus } from '../services/individual.service';
 
 const INCOME_TAX_PORTAL = 'https://www.incometax.gov.in/iec/foportal/';
@@ -22,7 +22,7 @@ export default function IndividualTaxDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [getToken]);
+  }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchVerificationStatus();
@@ -33,32 +33,6 @@ export default function IndividualTaxDashboard() {
   const panMasked = verificationStatus?.profile?.panVerification?.panMasked;
   const onboardingStep = verificationStatus?.onboardingStep ?? 1;
 
-  // Compute readiness items
-  const readinessItems = [
-    { label: 'Account verified', status: 'done' as const },
-    {
-      label: 'PAN verified',
-      status: verificationStatus?.panVerified ? 'done' as const : 'pending' as const,
-    },
-    {
-      label: 'Aadhaar-PAN status checked',
-      status: verificationStatus?.aadhaarLinked ? 'done' as const :
-               aadhaarStatus ? 'warning' as const : 'pending' as const,
-      detail: aadhaarStatus === 'NOT_LINKED' ? '1 action required' : undefined,
-    },
-    {
-      label: 'Documents uploaded',
-      status: 'pending' as const,
-    },
-    {
-      label: 'Income verified',
-      status: 'pending' as const,
-    },
-    {
-      label: 'Final review pending',
-      status: 'pending' as const,
-    },
-  ];
 
   return (
     <div className="bg-app-bg text-app-text-primary min-h-screen tabular-nums">
@@ -234,9 +208,9 @@ export default function IndividualTaxDashboard() {
                     <span className="text-[12px] font-semibold text-app-text-muted uppercase tracking-wider block">Filing readiness</span>
                     <p className="text-[14px] text-app-text-secondary mt-0.5">
                       {onboardingStep <= 1 ? 'Start by setting up your personal profile.' :
-                       onboardingStep <= 2 ? 'Verify your PAN to continue.' :
-                       onboardingStep <= 3 ? 'Check your Aadhaar-PAN link status.' :
-                       'Most of your return is ready for review.'}
+                        onboardingStep <= 2 ? 'Verify your PAN to continue.' :
+                          onboardingStep <= 3 ? 'Check your Aadhaar-PAN link status.' :
+                            'Most of your return is ready for review.'}
                     </p>
                   </div>
                   <div className="font-serif text-[34px] leading-none text-app-text-primary font-normal tabular-nums">

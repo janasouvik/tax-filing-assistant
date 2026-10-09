@@ -3,7 +3,7 @@ import { useAuth, useUser } from '@clerk/react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
-import { FilingStepper, FILING_STEPS, LoadingSpinner, InlineError, SandboxBanner } from '../../components/individual/SharedComponents';
+import { FilingStepper, LoadingSpinner, InlineError } from '../../components/individual/SharedComponents';
 import { individualApi, type TaxpayerProfile } from '../../services/individual.service';
 
 const STATES = [
@@ -40,8 +40,8 @@ export function IndividualLayout({ children, currentStep }: { children: React.Re
 }
 
 export default function PersonalProfile() {
-  const { getToken } = useAuth();
-  const { user } = useUser();
+  const { getToken, isLoaded: isAuthLoaded, isSignedIn } = useAuth();
+  const { user, isLoaded: isUserLoaded } = useUser();
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState<Partial<TaxpayerProfile>>({});
@@ -49,23 +49,39 @@ export default function PersonalProfile() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const hasFetched = React.useRef(false);
 
   useEffect(() => {
+    let mounted = true;
+    if (!isAuthLoaded || !isUserLoaded || !isSignedIn || hasFetched.current) return;
+    hasFetched.current = true;
+    
     (async () => {
+      console.log('PROFILE_GET_START');
       try {
         const p = await individualApi.getProfile(getToken);
-        setProfile(p);
+        if (!mounted) return;
+        
+        console.log('PROFILE_GET_SUCCESS', { method: 'GET', status: 200 });
+        
         // Pre-fill from Clerk if no profile data
         if (!p.fullName && user?.fullName) {
-          setProfile(prev => ({ ...prev, fullName: user.fullName || undefined, email: user.primaryEmailAddress?.emailAddress }));
+          setProfile({ ...p, fullName: user.fullName || undefined, email: user.primaryEmailAddress?.emailAddress });
+        } else {
+          setProfile(p);
         }
       } catch (err: any) {
+        if (!mounted) return;
+        console.error('PROFILE_GET_ERROR', err);
         if (err.code !== 'WORKSPACE_NOT_FOUND') setError(err.message || 'Failed to load profile');
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     })();
-  }, [getToken, user]);
+    
+    return () => { mounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthLoaded, isUserLoaded, isSignedIn, user?.id]);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -82,11 +98,14 @@ export default function PersonalProfile() {
     if (!validate()) return;
     setSaving(true);
     setError('');
+    console.log('PROFILE_SAVE_START', { method: 'PUT', route: '/individual/profile' });
     try {
       const updated = await individualApi.updateProfile(getToken, profile);
+      console.log('PROFILE_SAVE_SUCCESS', { method: 'PUT', status: 200 });
       setProfile(updated);
       navigate('/individual/pan');
     } catch (err: any) {
+      console.error('PROFILE_SAVE_ERROR', err);
       setError(err.message || 'Failed to save profile');
     } finally {
       setSaving(false);

@@ -21,7 +21,7 @@ app.use(helmet());
 app.use(cors({
   origin: config.frontend.url,
   credentials: true,
-  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 }));
 
 // Rate limiting

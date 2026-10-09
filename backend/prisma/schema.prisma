@@ -132,6 +132,7 @@ enum PANVerificationStatus {
   DOB_MISMATCH
   SERVICE_UNAVAILABLE
   SANDBOX
+  NOT_FOUND
 }
 
 enum AadhaarPanLinkStatus {
@@ -639,6 +640,7 @@ model PANVerification {
   taxpayerProfileId String               @unique
   pan               String
   panMasked         String
+  // Legacy fields (used by old mock/sandbox flow)
   submittedName     String?
   submittedDob      String?
   verifiedName      String?
@@ -652,6 +654,16 @@ model PANVerification {
   errorCode         String?
   errorMessage      String?
   verifiedAt        DateTime?
+  // Setu PAN API fields
+  category          String?              // e.g. "Individual"
+  fullName          String?              // full_name from Setu
+  firstName         String?
+  middleName        String?
+  lastName          String?
+  aadhaarSeedingStatus String?           // optional per Setu docs
+  verificationProvider String?           // "setu" | "mock"
+  traceId           String?              // Setu traceId for support
+  setuVerification  String?              // "success" | "failed" raw from Setu
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
 

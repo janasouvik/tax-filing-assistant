@@ -17,7 +17,7 @@ export default function DashboardRouter() {
         // Here we would call the backend to sync user and get their workspaces
         // For now, simulating the sync and redirect
         // In a real implementation, we'd fetch from /api/workspaces
-        
+
         // Mock backend call
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/sync`, {
           method: "POST",
@@ -36,7 +36,7 @@ export default function DashboardRouter() {
         }
 
         const data = await response.json();
-        
+
         if (data.workspaces && data.workspaces.length > 0) {
           const type = data.workspaces[0].type;
           if (type === "INDIVIDUAL") {
@@ -56,7 +56,7 @@ export default function DashboardRouter() {
     };
 
     syncUser();
-  }, [isLoaded, user, navigate, getToken]);
+  }, [isLoaded, user]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   if (error) {
     return <div className="flex h-screen items-center justify-center bg-app-bg text-app-error">{error}</div>;

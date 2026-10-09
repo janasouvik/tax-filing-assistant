@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { getAuth } from '@clerk/express';
+import { getAuth, clerkClient } from '@clerk/express';
 import { AppError } from '../utils/response';
 import prisma from '../config/prisma';
 
@@ -17,18 +17,56 @@ export const authenticate = (req: Request, res: Response, next: NextFunction): v
   next();
 };
 
-export const loadUser = async (req: AuthRequest, _res: Response, next: NextFunction): Promise<void> => {
+export const loadUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const auth = getAuth(req);
-    if (!auth.userId) return next(new AppError('No authenticated user', 401, 'UNAUTHORIZED'));
+    const token = req.headers.authorization?.startsWith('Bearer ') 
+      ? req.headers.authorization.split(' ')[1] 
+      : null;
+      
+    // Diagnostics
+    console.log('[AUTH_DIAGNOSTIC]', {
+      ready: true,
+      hasToken: !!token,
+      method: req.method,
+      route: req.originalUrl || req.url,
+    });
+
+    if (!auth.userId) {
+      console.log('[AUTH_DIAGNOSTIC] Failure category: No authenticated user (Missing or invalid token)');
+      return next(new AppError('No authenticated user', 401, 'UNAUTHORIZED'));
+    }
 
     // Find the user in DB by clerkId
-    const user = await prisma.user.findUnique({ where: { clerkId: auth.userId } });
-    if (!user) return next(new AppError('User not found in DB', 401, 'UNAUTHORIZED'));
+    let user = await prisma.user.findUnique({ where: { clerkId: auth.userId } });
+    
+    if (!user) {
+      console.log(`[AUTH_DIAGNOSTIC] User ${auth.userId} not found in DB. Synchronizing from Clerk...`);
+      try {
+        const clerkUser = await clerkClient.users.getUser(auth.userId);
+        const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+        
+        user = await prisma.user.create({
+          data: {
+            clerkId: auth.userId,
+            email: email,
+            firstName: clerkUser.firstName || '',
+            lastName: clerkUser.lastName || '',
+          }
+        });
+        console.log(`[AUTH_DIAGNOSTIC] Successfully synchronized user ${auth.userId} to DB.`);
+      } catch (syncError) {
+        console.error('[AUTH_DIAGNOSTIC] Failed to synchronize user:', syncError);
+        console.log('[AUTH_DIAGNOSTIC] Failure category: Internal user synchronization failed');
+        return next(new AppError('Internal user synchronization failed', 500, 'INTERNAL_SERVER_ERROR'));
+      }
+    }
 
     req.user = { userId: user.id };
     next();
   } catch (error) {
+    console.error('[AUTH_DIAGNOSTIC] Middleware error:', error);
+    console.log('[AUTH_DIAGNOSTIC] Failure category: Middleware execution error');
     next(error);
   }
 };

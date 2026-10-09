@@ -82,7 +82,18 @@ export default function AadhaarPANStatusPage() {
   };
 
   const panVerified = verificationStatus?.panVerified;
+  const panStatus = verificationStatus?.profile?.panVerification?.status;
   const panMasked = verificationStatus?.profile?.panVerification?.panMasked;
+  
+  const isFailed = panStatus === 'FAILED' || panStatus === 'NOT_FOUND' || panStatus === 'INACTIVE';
+  const isCheckDisabled = checking || !panVerified || isFailed;
+  
+  let disabledReason = '';
+  if (isFailed) {
+    disabledReason = 'PAN verification failed. Please re-verify your PAN.';
+  } else if (!panVerified) {
+    disabledReason = 'Please verify your PAN first';
+  }
   const currentStatus = aadhaarResult?.status;
   const statusUi = currentStatus ? STATUS_UI[currentStatus] : null;
   const isLinked = currentStatus === 'LINKED' || currentStatus === 'EXEMPT';
@@ -205,7 +216,7 @@ export default function AadhaarPANStatusPage() {
               <p className="text-[15px] text-app-text-secondary mb-5">Check your Aadhaar-PAN linkage status</p>
               <button
                 onClick={handleCheck}
-                disabled={checking || !panVerified}
+                disabled={isCheckDisabled}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary hover:bg-[#52321c] text-white text-[14px] font-medium transition-all shadow-sm disabled:opacity-60"
                 type="button"
               >
@@ -221,8 +232,8 @@ export default function AadhaarPANStatusPage() {
                   </>
                 )}
               </button>
-              {!panVerified && (
-                <p className="text-[12px] text-app-text-muted mt-3">Please verify your PAN first</p>
+              {disabledReason && (
+                <p className="text-[12px] text-app-text-muted mt-3">{disabledReason}</p>
               )}
             </div>
           )}
@@ -241,7 +252,7 @@ export default function AadhaarPANStatusPage() {
               {!aadhaarResult && (
                 <button
                   onClick={handleCheck}
-                  disabled={checking || !panVerified}
+                  disabled={isCheckDisabled}
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[14px] font-medium transition-all disabled:opacity-50"
                   type="button"
                 >

@@ -2,7 +2,7 @@ import { useAuth } from '@clerk/react';
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IndividualLayout } from './PersonalProfile';
-import { StatusBadge, LoadingSpinner } from '../../components/individual/SharedComponents';
+import { StatusBadge } from '../../components/individual/SharedComponents';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
 
@@ -105,7 +105,7 @@ export default function DocumentCollectionPage() {
       }
       uploadFile(file, selectedCategory);
     });
-  }, [selectedCategory, getToken]);
+  }, [selectedCategory]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();

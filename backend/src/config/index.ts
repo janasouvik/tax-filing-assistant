@@ -35,4 +35,15 @@ export const config = {
     apiKey: process.env.LLM_API_KEY || '',
     model: process.env.LLM_MODEL || 'gpt-4o',
   },
+  pan: {
+    /** "setu" | "mock". Default "mock" for safe development without credentials. */
+    provider: process.env.PAN_PROVIDER || 'mock',
+  },
+  setu: {
+    // These MUST remain server-side only. Never expose to frontend.
+    baseUrl: process.env.SETU_BASE_URL || 'https://dg-sandbox.setu.co',
+    clientId: process.env.SETU_CLIENT_ID || '',
+    clientSecret: process.env.SETU_CLIENT_SECRET || '',
+    productInstanceId: process.env.SETU_PRODUCT_INSTANCE_ID || '',
+  },
 };
