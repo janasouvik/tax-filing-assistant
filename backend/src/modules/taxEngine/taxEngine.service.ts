@@ -1,7 +1,6 @@
 /**
  * Deterministic Tax Engine for TaxPilot
- * FY 2025-26 / AY 2026-27
- * LLM is NEVER authoritative for final tax numbers.
+ * Dynamically fetches rules from the TaxRule table.
  */
 import prisma from '../../config/prisma';
 import { AppError } from '../../utils/response';
@@ -10,59 +9,60 @@ import { TaxRegime } from '@prisma/client';
 
 const RULE_VERSION = '2025-26-v1';
 
-// New Regime slabs FY 2025-26 (Finance Act 2024)
-const NEW_REGIME_SLABS = [
-  { upTo: 300000, rate: 0 },
-  { upTo: 600000, rate: 0.05 },
-  { upTo: 900000, rate: 0.1 },
-  { upTo: 1200000, rate: 0.15 },
-  { upTo: 1500000, rate: 0.2 },
-  { upTo: Infinity, rate: 0.3 },
-];
+export const getRules = async (regime: TaxRegime, version: string = RULE_VERSION) => {
+  const rules = await prisma.taxRule.findMany({
+    where: {
+      version,
+      isActive: true,
+      OR: [{ regime }, { regime: null }]
+    }
+  });
 
-// Old Regime slabs
-const OLD_REGIME_SLABS = [
-  { upTo: 250000, rate: 0 },
-  { upTo: 500000, rate: 0.05 },
-  { upTo: 1000000, rate: 0.2 },
-  { upTo: Infinity, rate: 0.3 },
-];
+  const slabs = rules.find(r => r.code === (regime === 'NEW' ? 'SLABS_NEW' : 'SLABS_OLD'))?.parameters as any[];
+  const rebate = rules.find(r => r.code === (regime === 'NEW' ? 'REBATE_87A_NEW' : 'REBATE_87A_OLD'))?.parameters as any;
+  const dedLimits = rules.find(r => r.code === (regime === 'NEW' ? 'DED_LIMITS_NEW' : 'DED_LIMITS_OLD'))?.parameters as Record<string, number>;
+  const surchargeRates = rules.find(r => r.code === 'SURCHARGE_RATES')?.parameters as any[];
+  const cessRate = rules.find(r => r.code === 'CESS_RATE')?.parameters as any;
 
-const OLD_REGIME_DEDUCTION_LIMITS: Record<string, number> = {
-  SEC_80C: 150000,
-  SEC_80CCD1B: 50000,
-  SEC_80D: 25000,
-  SEC_80TTA: 10000,
-  STANDARD_DEDUCTION: 50000,
-  HRA: Infinity,
-  SEC_80CCD2: Infinity,
-  SEC_80E: Infinity,
-  SEC_80G: Infinity,
+  if (!slabs || !rebate || !dedLimits || !surchargeRates || !cessRate) {
+    throw new AppError('Tax rules not fully configured for this regime/version', 500);
+  }
+
+  return { slabs, rebate, dedLimits, surchargeRates, cessRate };
 };
 
-const NEW_REGIME_DEDUCTION_LIMITS: Record<string, number> = {
-  SEC_80CCD2: Infinity,
-  STANDARD_DEDUCTION: 75000,
-};
-
-const calculateSlabTax = (income: number, slabs: typeof NEW_REGIME_SLABS): number => {
+const calculateSlabTax = (income: number, slabs: any[]): { tax: number, breakdown: any[] } => {
   let tax = 0;
   let prev = 0;
+  const breakdown: any[] = [];
   for (const slab of slabs) {
     if (income <= prev) break;
-    const taxable = Math.min(income, slab.upTo) - prev;
-    tax += taxable * slab.rate;
+    const taxableAmount = Math.min(income, slab.upTo) - prev;
+    const currentTax = taxableAmount * slab.rate;
+    tax += currentTax;
+    breakdown.push({
+      from: prev,
+      to: slab.upTo === 9999999999 ? null : slab.upTo,
+      rate: slab.rate * 100,
+      taxableAmount,
+      tax: currentTax
+    });
     prev = slab.upTo;
-    if (slab.upTo === Infinity) break;
   }
-  return Math.round(tax);
+  return { tax: Math.round(tax), breakdown };
 };
 
-const calculateSurcharge = (income: number, tax: number): number => {
-  if (income > 50000000) return tax * 0.37;
-  if (income > 20000000) return tax * 0.25;
-  if (income > 10000000) return tax * 0.15;
-  if (income > 5000000) return tax * 0.1;
+const calculateSurcharge = (income: number, tax: number, surchargeRates: any[], regime: TaxRegime): number => {
+  for (const tier of surchargeRates) {
+    if (income > tier.incomeAbove) {
+      let rate = tier.rate;
+      // Cap surcharge at 25% for New Regime
+      if (regime === 'NEW' && rate > 0.25) {
+        rate = 0.25;
+      }
+      return tax * rate;
+    }
+  }
   return 0;
 };
 
@@ -70,21 +70,21 @@ export const calculateTax = async (returnId: string, userId: string, regime?: Ta
   const ret = await getTaxReturn(returnId, userId);
   const effectiveRegime: TaxRegime = regime || ret.regime;
 
-  const [incomeEntries, deductions] = await Promise.all([
-    prisma.incomeEntry.findMany({ where: { taxReturnId: returnId } }),
+  const rules = await getRules(effectiveRegime);
+
+  const [consolidatedIncome, deductions] = await Promise.all([
+    import('../consolidation/consolidation.service').then(m => m.consolidateIncome(returnId, userId)),
     prisma.deduction.findMany({ where: { taxReturnId: returnId } }),
   ]);
 
-  const grossIncome = incomeEntries.reduce((s, i) => s + Number(i.amount), 0);
-  const tdsDeducted = incomeEntries.reduce((s, i) => s + Number(i.tdsDeducted || 0), 0);
-
-  const limits = effectiveRegime === 'NEW' ? NEW_REGIME_DEDUCTION_LIMITS : OLD_REGIME_DEDUCTION_LIMITS;
+  const grossIncome = consolidatedIncome.reduce((s, i) => s + Number(i.amount), 0);
+  const tdsDeducted = consolidatedIncome.reduce((s, i) => s + Number(i.tds || 0), 0);
 
   let totalDeductions = 0;
   const lines: { code: string; description: string; amount: number; ruleCode?: string }[] = [];
 
   for (const ded of deductions) {
-    const limit = limits[ded.section] ?? 0;
+    const limit = rules.dedLimits[ded.section] ?? 0;
     const eligible = Math.min(Number(ded.claimedAmount), limit);
     if (eligible > 0) {
       totalDeductions += eligible;
@@ -94,20 +94,20 @@ export const calculateTax = async (returnId: string, userId: string, regime?: Ta
 
   const taxableIncome = Math.max(0, grossIncome - totalDeductions);
 
-  // Rebate u/s 87A
-  const slabs = effectiveRegime === 'NEW' ? NEW_REGIME_SLABS : OLD_REGIME_SLABS;
-  let taxLiability = calculateSlabTax(taxableIncome, slabs);
+  const slabCalc = calculateSlabTax(taxableIncome, rules.slabs);
+  let taxLiability = slabCalc.tax;
+  const slabBreakdown = slabCalc.breakdown;
 
-  if (effectiveRegime === 'NEW' && taxableIncome <= 700000) {
-    taxLiability = 0; // Rebate u/s 87A
-    lines.push({ code: 'REBATE_87A', description: 'Rebate u/s 87A', amount: 0, ruleCode: '87A' });
-  } else if (effectiveRegime === 'OLD' && taxableIncome <= 500000) {
-    taxLiability = 0;
-    lines.push({ code: 'REBATE_87A', description: 'Rebate u/s 87A', amount: 0, ruleCode: '87A' });
+  if (taxableIncome <= rules.rebate.maxIncome) {
+    const rebateAmount = Math.min(taxLiability, rules.rebate.maxRebate);
+    if (rebateAmount > 0) {
+      taxLiability -= rebateAmount;
+      lines.push({ code: 'REBATE_87A', description: 'Rebate u/s 87A', amount: -rebateAmount, ruleCode: '87A' });
+    }
   }
 
-  const surcharge = Math.round(calculateSurcharge(taxableIncome, taxLiability));
-  const cess = Math.round((taxLiability + surcharge) * 0.04);
+  const surcharge = Math.round(calculateSurcharge(taxableIncome, taxLiability, rules.surchargeRates, effectiveRegime));
+  const cess = Math.round((taxLiability + surcharge) * rules.cessRate.rate);
   const totalTax = taxLiability + surcharge + cess;
   const refundPayable = tdsDeducted - totalTax;
 
@@ -125,7 +125,7 @@ export const calculateTax = async (returnId: string, userId: string, regime?: Ta
       totalTax,
       tdsDeducted,
       refundPayable,
-      inputs: { incomeCount: incomeEntries.length, deductionCount: deductions.length },
+      inputs: { incomeCount: consolidatedIncome.length, deductionCount: deductions.length },
       lines: {
         create: [
           { lineCode: 'GROSS_INCOME', description: 'Gross Total Income', amount: grossIncome, ruleCode: 'GTI', ruleVersion: RULE_VERSION, sortOrder: 1 },
@@ -133,7 +133,7 @@ export const calculateTax = async (returnId: string, userId: string, regime?: Ta
           { lineCode: 'TAXABLE_INCOME', description: 'Total Taxable Income', amount: taxableIncome, ruleCode: 'TI', ruleVersion: RULE_VERSION, sortOrder: 99 },
           { lineCode: 'TAX_LIABILITY', description: 'Income Tax', amount: taxLiability, ruleCode: 'SLAB', ruleVersion: RULE_VERSION, sortOrder: 100 },
           { lineCode: 'SURCHARGE', description: 'Surcharge', amount: surcharge, ruleCode: 'SURCHG', ruleVersion: RULE_VERSION, sortOrder: 101 },
-          { lineCode: 'CESS', description: 'Health & Education Cess (4%)', amount: cess, ruleCode: 'CESS', ruleVersion: RULE_VERSION, sortOrder: 102 },
+          { lineCode: 'CESS', description: 'Health & Education Cess', amount: cess, ruleCode: 'CESS', ruleVersion: RULE_VERSION, sortOrder: 102 },
           { lineCode: 'TOTAL_TAX', description: 'Total Tax Payable', amount: totalTax, ruleCode: 'TOTAL', ruleVersion: RULE_VERSION, sortOrder: 103 },
           { lineCode: 'TDS', description: 'TDS Deducted', amount: -tdsDeducted, ruleCode: 'TDS', ruleVersion: RULE_VERSION, sortOrder: 104 },
           { lineCode: 'REFUND_PAYABLE', description: refundPayable >= 0 ? 'Refund Receivable' : 'Tax Payable', amount: refundPayable, ruleCode: 'FINAL', ruleVersion: RULE_VERSION, sortOrder: 105 },
@@ -144,10 +144,10 @@ export const calculateTax = async (returnId: string, userId: string, regime?: Ta
   });
 
   // Update readiness
-  const readinessScore = Math.min(100, 40 + (incomeEntries.length > 0 ? 30 : 0) + (tdsDeducted > 0 ? 20 : 0) + (deductions.length > 0 ? 10 : 0));
+  const readinessScore = Math.min(100, 40 + (consolidatedIncome.length > 0 ? 30 : 0) + (tdsDeducted > 0 ? 20 : 0) + (deductions.length > 0 ? 10 : 0));
   await prisma.taxReturn.update({ where: { id: returnId }, data: { readinessScore } });
 
-  return calculation;
+  return { ...calculation, slabBreakdown };
 };
 
 export const getCalculation = async (returnId: string, userId: string) => {
@@ -163,8 +163,8 @@ export const compareRegimes = async (returnId: string, userId: string) => {
   const oldCalc = await calculateTax(returnId, userId, 'OLD');
   const newCalc = await calculateTax(returnId, userId, 'NEW');
   return {
-    old: { regime: 'OLD', totalTax: oldCalc.totalTax, taxableIncome: oldCalc.taxableIncome, refundPayable: oldCalc.refundPayable },
-    new: { regime: 'NEW', totalTax: newCalc.totalTax, taxableIncome: newCalc.taxableIncome, refundPayable: newCalc.refundPayable },
+    old: { regime: 'OLD', totalTax: oldCalc.totalTax, taxableIncome: oldCalc.taxableIncome, refundPayable: oldCalc.refundPayable, slabBreakdown: oldCalc.slabBreakdown },
+    new: { regime: 'NEW', totalTax: newCalc.totalTax, taxableIncome: newCalc.taxableIncome, refundPayable: newCalc.refundPayable, slabBreakdown: newCalc.slabBreakdown },
     recommendation: Number(oldCalc.totalTax) > Number(newCalc.totalTax) ? 'NEW' : 'OLD',
     saving: Math.abs(Number(oldCalc.totalTax) - Number(newCalc.totalTax)),
   };

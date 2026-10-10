@@ -435,53 +435,57 @@ export const checkEligibility = asyncHandler(async (req: AuthRequest, res: Respo
 
 /**
  * POST /api/v1/individual/tax/calculate
- * Deterministic rule-engine tax calculation — never uses LLM for calculation.
+ * Deterministic rule-engine tax calculation using prediction orchestrator.
  */
 export const calculateTaxHandler = asyncHandler(async (req: AuthRequest, res: Response, _next: NextFunction) => {
   const workspaceId = await getWorkspaceForUser(req.user!.userId);
 
-  // Fetch income and deductions from the most recent tax return
+  // Fetch the most recent tax return
   const taxReturn = await prisma.taxReturn.findFirst({
     where: { workspaceId },
     orderBy: { createdAt: 'desc' },
-    include: { incomeEntries: true, deductions: true },
   });
 
-  const incomeEntries = taxReturn?.incomeEntries || [];
-  const deductions = taxReturn?.deductions || [];
+  if (!taxReturn) {
+    res.json(successResponse({ note: 'No tax return found.' }));
+    return;
+  }
 
-  const grossIncome = incomeEntries.reduce((s, e) => s + Number(e.amount), 0);
-  const tdsDeducted = incomeEntries.reduce((s, e) => s + Number(e.tdsDeducted || 0), 0);
-
-  // Map deductions to calculator format
-  const d80C = deductions.filter(d => d.section === 'SEC_80C').reduce((s, d) => s + Number(d.claimedAmount), 0);
-  const d80D = deductions.filter(d => d.section === 'SEC_80D').reduce((s, d) => s + Number(d.claimedAmount), 0);
-  const d80CCD1B = deductions.filter(d => d.section === 'SEC_80CCD1B').reduce((s, d) => s + Number(d.claimedAmount), 0);
-  const d80CCD2 = deductions.filter(d => d.section === 'SEC_80CCD2').reduce((s, d) => s + Number(d.claimedAmount), 0);
-  const dHLP = deductions.filter(d => d.section === 'SEC_24B').reduce((s, d) => s + Number(d.claimedAmount), 0);
-  const dOther = deductions.filter(d => !['SEC_80C', 'SEC_80D', 'SEC_80CCD1B', 'SEC_80CCD2', 'SEC_24B'].includes(d.section)).reduce((s, d) => s + Number(d.claimedAmount), 0);
-
-  const baseInput = {
-    assessmentYear: '2026-27',
-    itrType: taxReturn?.returnType || 'ITR1',
-    grossIncome,
-    standardDeduction: 75000,
-    deductions80C: d80C,
-    deductions80D: d80D,
-    deductions80CCD1B: d80CCD1B,
-    deductions80CCD2: d80CCD2,
-    deductionsHousePropertyLoss: dHLP,
-    otherDeductions: dOther,
-    tdsDeducted,
-    advanceTaxPaid: 0,
-  };
-
-  const comparison = compareRegimes(baseInput);
+  // Call Orchestrator
+  const { generateTaxPrediction } = await import('../modules/taxPrediction/prediction.service');
+  const predictionResult = await generateTaxPrediction(taxReturn.id, req.user!.userId);
 
   res.json(successResponse({
-    comparison,
-    inputSummary: { grossIncome, tdsDeducted, incomeCount: incomeEntries.length, deductionCount: deductions.length },
-    note: 'Tax calculated by TaxPilot rule engine for AY 2026-27. Final liability must be confirmed on the Income Tax portal.',
+    comparison: {
+      newRegime: {
+        totalTax: Number(predictionResult.regimes.new.totalTax),
+        taxableIncome: Number(predictionResult.regimes.new.taxableIncome),
+        refundPayable: Number(predictionResult.regimes.new.refundPayable),
+        slabBreakdown: predictionResult.regimes.new.slabBreakdown
+      },
+      oldRegime: {
+        totalTax: Number(predictionResult.regimes.old.totalTax),
+        taxableIncome: Number(predictionResult.regimes.old.taxableIncome),
+        refundPayable: Number(predictionResult.regimes.old.refundPayable),
+        slabBreakdown: predictionResult.regimes.old.slabBreakdown
+      },
+      savings: Number(predictionResult.regimes.saving),
+      recommendedRegime: predictionResult.regimes.recommendation,
+      savingsExplanation: `Choosing the ${predictionResult.regimes.recommendation} regime saves you ₹${Number(predictionResult.regimes.saving).toLocaleString()}`
+    },
+    inputSummary: { 
+      grossIncome: Number(predictionResult.prediction.grossIncome), 
+      tdsDeducted: Number(predictionResult.prediction.tdsDeducted), 
+      incomeCount: predictionResult.readiness.score, // Just mapping some data here as placeholder 
+      deductionCount: predictionResult.deductionEvaluation.length 
+    },
+    prediction: predictionResult.prediction,
+    optimizations: predictionResult.optimizations,
+    deductionEvaluation: predictionResult.deductionEvaluation,
+    issues: predictionResult.issues,
+    confidence: predictionResult.confidence,
+    readiness: predictionResult.readiness,
+    note: 'Tax calculated by TaxPilot prediction engine for AY 2026-27. Final liability must be confirmed on the Income Tax portal.',
     calculatedAt: new Date().toISOString(),
   }));
 });

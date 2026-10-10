@@ -11,24 +11,33 @@ const buildContext = async (workspaceId: string, taxReturnId?: string): Promise<
   const parts: string[] = [];
 
   if (taxReturnId) {
-    const [income, deductions, calculation, issues] = await Promise.all([
-      prisma.incomeEntry.findMany({ where: { taxReturnId } }),
-      prisma.deduction.findMany({ where: { taxReturnId } }),
-      prisma.taxCalculation.findFirst({ where: { taxReturnId }, include: { lines: { orderBy: { sortOrder: 'asc' } } }, orderBy: { calculatedAt: 'desc' } }),
-      prisma.validationIssue.findMany({ where: { taxReturnId, status: 'OPEN' } }),
-    ]);
+    const { generateTaxPrediction } = await import('../taxPrediction/prediction.service');
+    
+    try {
+      // Pass a dummy userId since we already verified ownership above
+      const prediction = await generateTaxPrediction(taxReturnId, 'SYSTEM');
+      
+      parts.push(`PREDICTION CONTEXT:
+- Gross Income: ₹${prediction.prediction.grossIncome.toLocaleString()}
+- Taxable Income: ₹${prediction.prediction.taxableIncome.toLocaleString()}
+- Total Tax Liability: ₹${prediction.prediction.totalTaxLiability.toLocaleString()}
+- Estimated Refund/Payable: ₹${prediction.prediction.estimatedRefundOrPayable.toLocaleString()}
+- Recommended Regime: ${prediction.regimes.recommendation} (Potential Saving: ₹${prediction.regimes.saving.toLocaleString()})`);
 
-    if (income.length > 0) {
-      parts.push(`INCOME ENTRIES:\n${income.map((i) => `- ${i.incomeType}: ₹${Number(i.amount).toLocaleString()} from ${i.source}`).join('\n')}`);
-    }
-    if (deductions.length > 0) {
-      parts.push(`DEDUCTIONS:\n${deductions.map((d) => `- ${d.section}: ₹${Number(d.claimedAmount).toLocaleString()}`).join('\n')}`);
-    }
-    if (calculation) {
-      parts.push(`LATEST TAX CALCULATION (${calculation.regime} REGIME):\n- Gross Income: ₹${Number(calculation.grossIncome).toLocaleString()}\n- Total Deductions: ₹${Number(calculation.totalDeductions).toLocaleString()}\n- Taxable Income: ₹${Number(calculation.taxableIncome).toLocaleString()}\n- Total Tax: ₹${Number(calculation.totalTax).toLocaleString()}\n- ${Number(calculation.refundPayable) >= 0 ? 'Refund' : 'Tax Payable'}: ₹${Math.abs(Number(calculation.refundPayable)).toLocaleString()}`);
-    }
-    if (issues.length > 0) {
-      parts.push(`OPEN ISSUES:\n${issues.map((i) => `- [${i.severity}] ${i.title}: ${i.description}`).join('\n')}`);
+      if (prediction.issues.length > 0) {
+        parts.push(`OPEN ISSUES:\n${prediction.issues.map((i: any) => `- [${i.severity}] ${i.title}: ${i.description}`).join('\n')}`);
+      }
+      
+      parts.push(`FILING READINESS SCORE: ${prediction.readiness.score}%`);
+      if (prediction.readiness.blockers.length > 0) {
+        parts.push(`BLOCKERS:\n${prediction.readiness.blockers.map((b: string) => `- ${b}`).join('\n')}`);
+      }
+      
+      parts.push(`CONFIDENCE SCORE: ${prediction.confidence.overallScore}%`);
+      
+    } catch (error) {
+      console.error('Error generating prediction for copilot context', error);
+      parts.push('Could not fetch prediction context. The user may not have added any income yet.');
     }
   }
 
