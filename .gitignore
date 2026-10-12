@@ -274,3 +274,7 @@ cython_debug/
 .env.local
 !*.example
 !.env.example
+test-results/
+playwright-report/
+blob-report/
+

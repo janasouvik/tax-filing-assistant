@@ -122,26 +122,26 @@ export default function DocumentCollectionPage() {
   return (
     <IndividualLayout currentStep={5}>
       <div className="space-y-6">
-        <div className="bg-app-surface border border-app-border rounded-xl p-8 shadow-xs">
+        <div className="bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-8 shadow-xs">
           {/* Header */}
           <div className="mb-7">
             <div className="flex items-center gap-2 mb-1">
               <span className="material-symbols-outlined text-[20px] text-app-accent">folder_open</span>
-              <p className="text-[12px] font-semibold text-app-text-muted uppercase tracking-wider">Step 5 of 12</p>
+              <p className="text-[12px] font-semibold text-app-text-muted dark:text-gray-400 uppercase tracking-wider">Step 5 of 12</p>
             </div>
-            <h1 className="font-serif text-[32px] text-app-text-primary font-normal">Upload Documents</h1>
-            <p className="text-[15px] text-app-text-secondary mt-1">
+            <h1 className="font-serif text-[32px] text-app-text-primary dark:text-app-surface font-normal">Upload Documents</h1>
+            <p className="text-[15px] text-app-text-secondary dark:text-gray-300 mt-1">
               Upload your tax documents. TaxPilot will extract and organize the information automatically.
             </p>
           </div>
 
           {/* Category selector */}
           <div className="mb-5">
-            <label className="block text-[13px] font-medium text-app-text-primary mb-2">Document Type</label>
+            <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-2">Document Type</label>
             <select
               value={selectedCategory}
               onChange={e => setSelectedCategory(e.target.value)}
-              className="w-full sm:w-auto px-3.5 py-2.5 rounded-lg border border-app-border text-[14px] bg-white text-app-text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+              className="w-full sm:w-auto px-3.5 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-[14px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
             >
               {DOCUMENT_TYPES.map(dt => (
                 <option key={dt.id} value={dt.id}>{dt.label}{dt.required ? ' (Required)' : ''}</option>
@@ -155,7 +155,7 @@ export default function DocumentCollectionPage() {
             onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
             onDragLeave={() => setDragging(false)}
             className={`relative border-2 border-dashed rounded-xl p-12 text-center transition-all ${
-              dragging ? 'border-primary bg-[#FDF9F7] scale-[1.01]' : 'border-app-border hover:border-primary hover:bg-[#FDF9F7]'
+              dragging ? 'border-primary bg-[#FDF9F7] dark:bg-app-dark scale-[1.01]' : 'border-app-border dark:border-app-dark-border hover:border-primary hover:bg-[#FDF9F7] dark:bg-app-dark'
             }`}
           >
             <input
@@ -166,13 +166,13 @@ export default function DocumentCollectionPage() {
               onChange={e => handleFiles(e.target.files)}
               aria-label="Upload documents"
             />
-            <span className="material-symbols-outlined text-[48px] text-app-text-muted block mb-3">
+            <span className="material-symbols-outlined text-[48px] text-app-text-muted dark:text-gray-400 block mb-3">
               {dragging ? 'file_download' : 'cloud_upload'}
             </span>
-            <p className="text-[16px] font-medium text-app-text-primary mb-1.5">
+            <p className="text-[16px] font-medium text-app-text-primary dark:text-app-surface mb-1.5">
               {dragging ? 'Drop files here' : 'Drag & drop files or click to browse'}
             </p>
-            <p className="text-[13px] text-app-text-muted">
+            <p className="text-[13px] text-app-text-muted dark:text-gray-400">
               Supports PDF, PNG, JPEG · Maximum 25MB per file
             </p>
           </div>
@@ -180,16 +180,16 @@ export default function DocumentCollectionPage() {
           {/* Uploaded files list */}
           {uploadedFiles.length > 0 && (
             <div className="mt-6">
-              <h3 className="text-[14px] font-semibold text-app-text-primary mb-3">Uploaded Files</h3>
+              <h3 className="text-[14px] font-semibold text-app-text-primary dark:text-app-surface mb-3">Uploaded Files</h3>
               <div className="space-y-2">
                 {uploadedFiles.map(file => (
-                  <div key={file.id} className="flex items-center gap-3 px-4 py-3 rounded-lg border border-app-border bg-app-bg">
-                    <span className="material-symbols-outlined text-[20px] text-app-text-muted">
+                  <div key={file.id} className="flex items-center gap-3 px-4 py-3 rounded-lg border border-app-border dark:border-app-dark-border bg-app-bg dark:bg-app-dark">
+                    <span className="material-symbols-outlined text-[20px] text-app-text-muted dark:text-gray-400">
                       {file.name.endsWith('.pdf') ? 'picture_as_pdf' : 'image'}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-medium text-app-text-primary truncate">{file.name}</p>
-                      <p className="text-[12px] text-app-text-muted">{formatSize(file.size)}</p>
+                      <p className="text-[14px] font-medium text-app-text-primary dark:text-app-surface truncate">{file.name}</p>
+                      <p className="text-[12px] text-app-text-muted dark:text-gray-400">{formatSize(file.size)}</p>
                       {file.error && <p className="text-[12px] text-app-error mt-0.5">{file.error}</p>}
                     </div>
                     {statusBadge(file.status)}
@@ -200,10 +200,10 @@ export default function DocumentCollectionPage() {
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-app-border-light">
+          <div className="flex items-center justify-between mt-8 pt-6 border-t border-app-border dark:border-app-dark-border-light">
             <button
               onClick={() => navigate('/individual/eligibility')}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[14px] font-medium transition-all"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-app-bg dark:bg-app-dark text-[14px] font-medium transition-all"
               type="button"
             >
               <span className="material-symbols-outlined text-[16px]">arrow_back</span>
@@ -221,19 +221,19 @@ export default function DocumentCollectionPage() {
         </div>
 
         {/* Suggested documents grid */}
-        <div className="bg-app-surface border border-app-border rounded-xl p-6 shadow-xs">
-          <h2 className="text-[17px] font-semibold text-app-text-primary mb-4">Suggested Documents for AY 2026–27</h2>
+        <div className="bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-6 shadow-xs">
+          <h2 className="text-[17px] font-semibold text-app-text-primary dark:text-app-surface mb-4">Suggested Documents for AY 2026–27</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {DOCUMENT_TYPES.map(dt => (
-              <div key={dt.id} className="flex items-start gap-3 p-3.5 rounded-lg border border-app-border hover:border-primary hover:bg-[#FDF9F7] transition-all cursor-pointer"
+              <div key={dt.id} className="flex items-start gap-3 p-3.5 rounded-lg border border-app-border dark:border-app-dark-border hover:border-primary hover:bg-[#FDF9F7] dark:bg-app-dark transition-all cursor-pointer"
                 onClick={() => setSelectedCategory(dt.id)}>
                 <span className="material-symbols-outlined text-[20px] text-app-accent mt-0.5">{dt.icon}</span>
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="text-[13px] font-semibold text-app-text-primary">{dt.label}</p>
+                    <p className="text-[13px] font-semibold text-app-text-primary dark:text-app-surface">{dt.label}</p>
                     {dt.required && <span className="text-[10px] px-1.5 py-0.5 rounded bg-app-warning-bg text-app-warning font-medium">Required</span>}
                   </div>
-                  <p className="text-[12px] text-app-text-muted mt-0.5">{dt.desc}</p>
+                  <p className="text-[12px] text-app-text-muted dark:text-gray-400 mt-0.5">{dt.desc}</p>
                 </div>
               </div>
             ))}

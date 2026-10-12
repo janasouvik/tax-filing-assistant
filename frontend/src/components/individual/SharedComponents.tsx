@@ -20,7 +20,7 @@ const BADGE_CONFIG: Record<BadgeVariant, { icon: string; label: string; classes:
   failed: { icon: 'cancel', label: 'Failed', classes: 'bg-[#FFF1F0] text-app-error border-app-error/20' },
   processing: { icon: 'sync', label: 'Processing', classes: 'bg-blue-50 text-blue-700 border-blue-200' },
   exempt: { icon: 'info', label: 'Exempt', classes: 'bg-app-success-bg text-app-success border-app-success/20' },
-  unknown: { icon: 'help_outline', label: 'Unknown', classes: 'bg-gray-50 text-gray-600 border-gray-200' },
+  unknown: { icon: 'help_outline', label: 'Unknown', classes: 'bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700' },
   sandbox: { icon: 'science', label: 'Demo / Sandbox', classes: 'bg-purple-50 text-purple-700 border-purple-200' },
 };
 
@@ -106,7 +106,7 @@ export function FilingStepper({ currentStep, completedSteps = [], errorSteps = [
                 <div className={`relative w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold border-2 transition-all
                   ${status === 'completed' ? 'bg-app-success border-app-success text-white' : ''}
                   ${status === 'current' ? 'bg-primary border-primary text-white shadow-sm' : ''}
-                  ${status === 'pending' ? 'bg-white border-app-border text-app-text-muted' : ''}
+                  ${status === 'pending' ? 'bg-white dark:bg-app-dark-card border-app-border dark:border-app-dark-border text-app-text-muted dark:text-gray-400' : ''}
                   ${status === 'error' ? 'bg-app-error border-app-error text-white' : ''}
                 `}>
                   {status === 'completed' && (
@@ -121,7 +121,7 @@ export function FilingStepper({ currentStep, completedSteps = [], errorSteps = [
                 <span className={`text-[10px] font-medium text-center leading-tight whitespace-nowrap max-w-[52px] truncate
                   ${status === 'current' ? 'text-primary font-semibold' : ''}
                   ${status === 'completed' ? 'text-app-success' : ''}
-                  ${status === 'pending' ? 'text-app-text-muted' : ''}
+                  ${status === 'pending' ? 'text-app-text-muted dark:text-gray-400' : ''}
                   ${status === 'error' ? 'text-app-error' : ''}
                 `}>
                   {step.shortLabel}
@@ -188,14 +188,14 @@ export function TaxpayerVerificationCard({
   const identityReady = panVerified && aadhaarLinked;
 
   const cardClass = compact
-    ? 'bg-app-surface border border-app-border rounded-xl p-5'
-    : 'bg-app-surface border border-app-border rounded-xl p-6 shadow-xs';
+    ? 'bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-5'
+    : 'bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-6 shadow-xs';
 
   return (
     <div className={cardClass}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[15px] font-semibold text-app-text-primary">Taxpayer Verification</h3>
+        <h3 className="text-[15px] font-semibold text-app-text-primary dark:text-app-surface">Taxpayer Verification</h3>
         {identityReady && (
           <StatusBadge variant="verified" label="Identity Ready" size="sm" />
         )}
@@ -208,25 +208,25 @@ export function TaxpayerVerificationCard({
         {/* PAN Row */}
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[12px] text-app-text-muted font-medium uppercase tracking-wider">PAN</p>
+            <p className="text-[12px] text-app-text-muted dark:text-gray-400 font-medium uppercase tracking-wider">PAN</p>
             {panMasked && (
-              <p className="text-[13px] font-mono text-app-text-primary mt-0.5">{panMasked}</p>
+              <p className="text-[13px] font-mono text-app-text-primary dark:text-app-surface mt-0.5">{panMasked}</p>
             )}
             {panStatus === 'VERIFIED' && (
-              <p className="text-[12px] text-app-text-secondary mt-0.5">Name & DOB matched</p>
+              <p className="text-[12px] text-app-text-secondary dark:text-gray-300 mt-0.5">Name & DOB matched</p>
             )}
           </div>
           <StatusBadge variant={getPanBadge(panStatus)} label={panStatus === 'VERIFIED' ? 'Verified' : panStatus === 'SANDBOX' ? 'Verified (Sandbox)' : (panStatus || 'Pending')} size="sm" />
         </div>
 
-        <div className="border-t border-app-border-light" />
+        <div className="border-t border-app-border dark:border-app-dark-border-light" />
 
         {/* Aadhaar Row */}
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[12px] text-app-text-muted font-medium uppercase tracking-wider">Aadhaar–PAN Link</p>
+            <p className="text-[12px] text-app-text-muted dark:text-gray-400 font-medium uppercase tracking-wider">Aadhaar–PAN Link</p>
             {aadhaarStatus && (
-              <p className="text-[12px] text-app-text-secondary mt-0.5">
+              <p className="text-[12px] text-app-text-secondary dark:text-gray-300 mt-0.5">
                 {aadhaarLinked ? 'Your PAN and Aadhaar are linked' :
                   aadhaarStatus === 'PENDING' ? 'Link request is under validation' :
                     aadhaarStatus === 'NOT_LINKED' ? 'Linkage required — resolve on IT portal' :
@@ -240,13 +240,13 @@ export function TaxpayerVerificationCard({
           />
         </div>
 
-        <div className="border-t border-app-border-light" />
+        <div className="border-t border-app-border dark:border-app-dark-border-light" />
 
         {/* Identity Status */}
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[12px] text-app-text-muted font-medium uppercase tracking-wider">Identity Status</p>
-            <p className="text-[12px] text-app-text-secondary mt-0.5">
+            <p className="text-[12px] text-app-text-muted dark:text-gray-400 font-medium uppercase tracking-wider">Identity Status</p>
+            <p className="text-[12px] text-app-text-secondary dark:text-gray-300 mt-0.5">
               {identityReady ? 'Ready for tax filing' : 'Verification incomplete'}
             </p>
           </div>
@@ -284,7 +284,7 @@ export function TaxpayerVerificationCard({
               <button
                 onClick={onCheckAgain}
                 disabled={loading}
-                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[13px] transition-all disabled:opacity-50"
+                className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-app-bg dark:bg-app-dark text-[13px] transition-all disabled:opacity-50"
                 type="button"
               >
                 <span className="material-symbols-outlined text-[14px]">refresh</span>
@@ -317,10 +317,10 @@ export function FilingReadinessCard({ items, onContinue }: FilingReadinessCardPr
   const hasWarnings = items.some(i => i.status === 'warning');
 
   return (
-    <div className="bg-app-surface border border-app-border rounded-xl p-6 shadow-xs">
+    <div className="bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-6 shadow-xs">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[15px] font-semibold text-app-text-primary">Filing Readiness</h3>
-        <span className="font-serif text-[28px] leading-none text-app-text-primary tabular-nums">{pct}%</span>
+        <h3 className="text-[15px] font-semibold text-app-text-primary dark:text-app-surface">Filing Readiness</h3>
+        <span className="font-serif text-[28px] leading-none text-app-text-primary dark:text-app-surface tabular-nums">{pct}%</span>
       </div>
 
       {/* Progress bar */}
@@ -342,11 +342,11 @@ export function FilingReadinessCard({ items, onContinue }: FilingReadinessCardPr
               <span className="material-symbols-outlined text-[16px] text-app-warning shrink-0">warning</span>
             )}
             {item.status === 'pending' && (
-              <span className="material-symbols-outlined text-[16px] text-app-text-muted shrink-0">radio_button_unchecked</span>
+              <span className="material-symbols-outlined text-[16px] text-app-text-muted dark:text-gray-400 shrink-0">radio_button_unchecked</span>
             )}
-            <span className={item.status === 'pending' ? 'text-app-text-muted' : 'text-app-text-secondary'}>
+            <span className={item.status === 'pending' ? 'text-app-text-muted dark:text-gray-400' : 'text-app-text-secondary dark:text-gray-300'}>
               {item.label}
-              {item.detail && <span className="text-app-text-muted ml-1">— {item.detail}</span>}
+              {item.detail && <span className="text-app-text-muted dark:text-gray-400 ml-1">— {item.detail}</span>}
             </span>
           </li>
         ))}
@@ -388,8 +388,8 @@ export function SandboxBanner() {
 export function LoadingSpinner({ message }: { message?: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-8">
-      <div className="w-8 h-8 border-2 border-app-border border-t-primary rounded-full animate-spin" />
-      {message && <p className="text-[13px] text-app-text-secondary">{message}</p>}
+      <div className="w-8 h-8 border-2 border-app-border dark:border-app-dark-border border-t-primary rounded-full animate-spin" />
+      {message && <p className="text-[13px] text-app-text-secondary dark:text-gray-300">{message}</p>}
     </div>
   );
 }

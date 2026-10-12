@@ -56,14 +56,14 @@ export default function TaxCalendarComplianceDeadlines() {
 <span className="material-symbols-outlined text-[18px]">calendar_month</span>
               Sync with My Calendar (.ics / Google / Outlook)
             </button>
-<button className="bg-white hover:bg-[#EFEAE3] text-[#171310] font-body-sm text-body-sm font-medium px-5 py-3 rounded border border-[#D8D1C9] transition-all flex items-center gap-2">
+<button className="bg-white dark:bg-app-dark-card hover:bg-[#EFEAE3] text-[#171310] font-body-sm text-body-sm font-medium px-5 py-3 rounded border border-[#D8D1C9] transition-all flex items-center gap-2">
 <span className="material-symbols-outlined text-[18px] text-secondary">download</span>
               Download AY 2026–27 Master Wallchart (PDF)
             </button>
 </div>
 </div>
 
-<div className="lg:col-span-4 bg-white border border-[#D8D1C9] rounded p-6 shadow-sm space-y-5">
+<div className="lg:col-span-4 bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded p-6 shadow-sm space-y-5">
 <div className="border-b border-[#D8D1C9] pb-3 flex items-center justify-between">
 <span className="font-label-caps text-label-caps uppercase tracking-wider text-secondary">Filing Telemetry</span>
 <span className="font-mono text-xs text-primary font-semibold">CBDT LIVE</span>
@@ -100,16 +100,16 @@ export default function TaxCalendarComplianceDeadlines() {
 <button className="bg-[#24170F] text-[#EEE3D6] font-body-sm text-[13px] px-3.5 py-1.5 rounded font-medium whitespace-nowrap transition-colors" data-persona="all">
           All Deadlines (Master)
         </button>
-<button className="bg-white hover:bg-[#FAF9F7] text-[#171310] border border-[#D8D1C9] font-body-sm text-[13px] px-3.5 py-1.5 rounded whitespace-nowrap transition-colors" data-persona="salaried">
+<button className="bg-white dark:bg-app-dark-card hover:bg-[#FAF9F7] text-[#171310] border border-[#D8D1C9] font-body-sm text-[13px] px-3.5 py-1.5 rounded whitespace-nowrap transition-colors" data-persona="salaried">
           Salaried &amp; Tech (ITR-1/2 · FA · ESOP)
         </button>
-<button className="bg-white hover:bg-[#FAF9F7] text-[#171310] border border-[#D8D1C9] font-body-sm text-[13px] px-3.5 py-1.5 rounded whitespace-nowrap transition-colors" data-persona="consultants">
+<button className="bg-white dark:bg-app-dark-card hover:bg-[#FAF9F7] text-[#171310] border border-[#D8D1C9] font-body-sm text-[13px] px-3.5 py-1.5 rounded whitespace-nowrap transition-colors" data-persona="consultants">
           Freelancers &amp; Sec 44ADA
         </button>
-<button className="bg-white hover:bg-[#FAF9F7] text-[#171310] border border-[#D8D1C9] font-body-sm text-[13px] px-3.5 py-1.5 rounded whitespace-nowrap transition-colors" data-persona="smes">
+<button className="bg-white dark:bg-app-dark-card hover:bg-[#FAF9F7] text-[#171310] border border-[#D8D1C9] font-body-sm text-[13px] px-3.5 py-1.5 rounded whitespace-nowrap transition-colors" data-persona="smes">
           SMEs &amp; Corporate (TDS · GST · 43B(h))
         </button>
-<button className="bg-white hover:bg-[#FAF9F7] text-[#171310] border border-[#D8D1C9] font-body-sm text-[13px] px-3.5 py-1.5 rounded whitespace-nowrap transition-colors" data-persona="cas">
+<button className="bg-white dark:bg-app-dark-card hover:bg-[#FAF9F7] text-[#171310] border border-[#D8D1C9] font-body-sm text-[13px] px-3.5 py-1.5 rounded whitespace-nowrap transition-colors" data-persona="cas">
           CA Practice Ledgers
         </button>
 </div>
@@ -145,7 +145,7 @@ export default function TaxCalendarComplianceDeadlines() {
 
 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-<div className="bg-white border-2 border-[#8A5A3C] rounded p-5 relative shadow-sm flex flex-col justify-between transition-transform hover:-translate-y-0.5">
+<div className="bg-white dark:bg-app-dark-card border-2 border-[#8A5A3C] rounded p-5 relative shadow-sm flex flex-col justify-between transition-transform hover:-translate-y-0.5">
 <div className="absolute -top-3 right-4 bg-[#8A5A3C] text-white font-label-caps text-[10px] tracking-widest uppercase px-2.5 py-0.5 rounded">
             Imminent · Due in 18 Days
           </div>
@@ -173,7 +173,7 @@ export default function TaxCalendarComplianceDeadlines() {
 </div>
 </div>
 
-<div className="bg-white border border-[#D8D1C9] rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
+<div className="bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
 <div>
 <div className="font-mono text-xs text-secondary mb-1">SCHEDULE II · CERTIFICATE ISSUANCE</div>
 <div className="font-headline-md text-headline-md font-serif text-[#171310] mb-2">15 July 2025</div>
@@ -198,7 +198,7 @@ export default function TaxCalendarComplianceDeadlines() {
 </div>
 </div>
 
-<div className="bg-white border-2 border-[#ba1a1a]/40 rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
+<div className="bg-white dark:bg-app-dark-card border-2 border-[#ba1a1a]/40 rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
 <div className="absolute -top-3 right-4 bg-[#ba1a1a] text-white font-label-caps text-[10px] tracking-widest uppercase px-2.5 py-0.5 rounded">
             Statutory Peak Cutoff
           </div>
@@ -226,7 +226,7 @@ export default function TaxCalendarComplianceDeadlines() {
 </div>
 </div>
 
-<div className="bg-white border border-[#D8D1C9] rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
+<div className="bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
 <div>
 <div className="font-mono text-xs text-secondary mb-1">SCHEDULE III · Q2 ADVANCE TAX</div>
 <div className="font-headline-md text-headline-md font-serif text-[#171310] mb-2">15 Sept 2025</div>
@@ -251,7 +251,7 @@ export default function TaxCalendarComplianceDeadlines() {
 </div>
 </div>
 
-<div className="bg-white border border-[#D8D1C9] rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
+<div className="bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
 <div>
 <div className="font-mono text-xs text-secondary mb-1">SCHEDULE IV · AUDIT &amp; CORPORATE</div>
 <div className="font-headline-md text-headline-md font-serif text-[#171310] mb-2">30 Sep / 31 Oct</div>
@@ -274,7 +274,7 @@ export default function TaxCalendarComplianceDeadlines() {
 </div>
 </div>
 
-<div className="bg-white border border-[#D8D1C9] rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
+<div className="bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
 <div>
 <div className="font-mono text-xs text-secondary mb-1">SCHEDULE V · Q3 ADVANCE TAX</div>
 <div className="font-headline-md text-headline-md font-serif text-[#171310] mb-2">15 Dec 2025</div>
@@ -297,7 +297,7 @@ export default function TaxCalendarComplianceDeadlines() {
 </div>
 </div>
 
-<div className="bg-white border border-[#D8D1C9] rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
+<div className="bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
 <div>
 <div className="font-mono text-xs text-secondary mb-1">SCHEDULE VI · Q4 FINAL INSTALLMENT</div>
 <div className="font-headline-md text-headline-md font-serif text-[#171310] mb-2">15 March 2026</div>
@@ -320,7 +320,7 @@ export default function TaxCalendarComplianceDeadlines() {
 </div>
 </div>
 
-<div className="bg-white border border-[#D8D1C9] rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
+<div className="bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded p-5 relative shadow-sm flex flex-col justify-between hover:-translate-y-0.5 transition-transform">
 <div>
 <div className="font-mono text-xs text-secondary mb-1">SCHEDULE VII · FISCAL CURTAIN</div>
 <div className="font-headline-md text-headline-md font-serif text-[#171310] mb-2">31 March 2026</div>
@@ -357,7 +357,7 @@ export default function TaxCalendarComplianceDeadlines() {
           Simulate statutory interest penalties incurred from deferred advance tax installments versus TaxPilot autonomous automated cashflow scheduling.
         </p>
 </div>
-<div className="bg-white border border-[#D8D1C9] rounded shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+<div className="bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded shadow-sm overflow-hidden grid grid-cols-1 lg:grid-cols-12">
 
 <div className="lg:col-span-5 p-6 lg:p-8 bg-[#FAF9F7] border-b lg:border-b-0 lg:border-r border-[#D8D1C9] space-y-6">
 <div className="flex items-center justify-between border-b border-[#D8D1C9] pb-3">
@@ -371,7 +371,7 @@ export default function TaxCalendarComplianceDeadlines() {
             </label>
 <div className="relative">
 <span className="absolute left-3 top-2.5 text-secondary font-mono text-sm">₹</span>
-<input className="w-full pl-8 pr-4 py-2 bg-white border border-[#D8D1C9] rounded font-mono text-sm focus:border-primary focus:outline-none" id="simIncome" type="text" value="28,00,000"/>
+<input readOnly className="w-full pl-8 pr-4 py-2 bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded font-mono text-sm focus:border-primary focus:outline-none" id="simIncome" type="text" value="28,00,000"/>
 </div>
 <p className="text-xs text-secondary mt-1">Presumptive taxation eligible u/s 44ADA (50% deemed profit = ₹14,00,000).</p>
 </div>
@@ -382,7 +382,7 @@ export default function TaxCalendarComplianceDeadlines() {
             </label>
 <div className="relative">
 <span className="absolute left-3 top-2.5 text-secondary font-mono text-sm">₹</span>
-<input className="w-full pl-8 pr-4 py-2 bg-white border border-[#D8D1C9] rounded font-mono text-sm focus:border-primary focus:outline-none" id="simTax" type="text" value="4,80,000"/>
+<input readOnly className="w-full pl-8 pr-4 py-2 bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded font-mono text-sm focus:border-primary focus:outline-none" id="simTax" type="text" value="4,80,000"/>
 </div>
 <p className="text-xs text-secondary mt-1">Exceeds the ₹10,000 statutory advance tax threshold under Sec 208.</p>
 </div>
@@ -393,7 +393,7 @@ export default function TaxCalendarComplianceDeadlines() {
             </label>
 <div className="relative">
 <span className="absolute left-3 top-2.5 text-secondary font-mono text-sm">₹</span>
-<input className="w-full pl-8 pr-4 py-2 bg-white border border-[#D8D1C9] rounded font-mono text-sm focus:border-primary focus:outline-none" id="simPaid" type="text" value="1,00,000"/>
+<input readOnly className="w-full pl-8 pr-4 py-2 bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded font-mono text-sm focus:border-primary focus:outline-none" id="simPaid" type="text" value="1,00,000"/>
 </div>
 <div className="mt-2 text-xs text-[#9A4540] flex items-center gap-1 font-medium">
 <span className="material-symbols-outlined text-[14px]">error</span>
@@ -590,13 +590,13 @@ export default function TaxCalendarComplianceDeadlines() {
 </div>
 <div className="flex items-center gap-3">
 <span className="font-body-sm text-body-sm text-secondary">Export Format:</span>
-<button className="bg-white border border-[#D8D1C9] text-xs font-mono px-3 py-1.5 rounded hover:bg-[#EFEAE3] transition-colors">CSV</button>
-<button className="bg-white border border-[#D8D1C9] text-xs font-mono px-3 py-1.5 rounded hover:bg-[#EFEAE3] transition-colors">JSON</button>
-<button className="bg-white border border-[#D8D1C9] text-xs font-mono px-3 py-1.5 rounded hover:bg-[#EFEAE3] transition-colors">PDF Ledger</button>
+<button className="bg-white dark:bg-app-dark-card border border-[#D8D1C9] text-xs font-mono px-3 py-1.5 rounded hover:bg-[#EFEAE3] transition-colors">CSV</button>
+<button className="bg-white dark:bg-app-dark-card border border-[#D8D1C9] text-xs font-mono px-3 py-1.5 rounded hover:bg-[#EFEAE3] transition-colors">JSON</button>
+<button className="bg-white dark:bg-app-dark-card border border-[#D8D1C9] text-xs font-mono px-3 py-1.5 rounded hover:bg-[#EFEAE3] transition-colors">PDF Ledger</button>
 </div>
 </div>
 
-<div className="bg-white border border-[#D8D1C9] rounded shadow-sm overflow-x-auto">
+<div className="bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded shadow-sm overflow-x-auto">
 <table className="w-full text-left font-body-sm text-body-sm border-collapse">
 <thead className="bg-[#EFEAE3] text-[#51443d] font-label-caps text-[11px] uppercase tracking-wider border-b border-[#D8D1C9]">
 <tr>
@@ -690,7 +690,7 @@ export default function TaxCalendarComplianceDeadlines() {
 <section className="w-full bg-[#F7F5F1] py-16 px-6 lg:px-12 border-b border-[#D8D1C9]">
 <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
 
-<div className="lg:col-span-7 bg-white border border-[#D8D1C9] rounded p-6 lg:p-8 space-y-6 flex flex-col justify-between">
+<div className="lg:col-span-7 bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded p-6 lg:p-8 space-y-6 flex flex-col justify-between">
 <div>
 <div className="flex items-center justify-between border-b border-[#D8D1C9] pb-3 mb-6">
 <span className="font-label-caps text-label-caps uppercase tracking-wider text-secondary">Ecosystem Bridges</span>
@@ -732,7 +732,7 @@ export default function TaxCalendarComplianceDeadlines() {
 </div>
 </div>
 
-<div className="lg:col-span-5 bg-white border border-[#D8D1C9] rounded p-6 lg:p-8 space-y-6 flex flex-col justify-between">
+<div className="lg:col-span-5 bg-white dark:bg-app-dark-card border border-[#D8D1C9] rounded p-6 lg:p-8 space-y-6 flex flex-col justify-between">
 <div>
 <div className="flex items-center justify-between border-b border-[#D8D1C9] pb-3 mb-6">
 <span className="font-label-caps text-label-caps uppercase tracking-wider text-secondary">Dispatch Channels</span>

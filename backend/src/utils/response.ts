@@ -34,11 +34,18 @@ export const errorHandler = (
   const statusCode = err.statusCode || 500;
   const code = err.code || 'INTERNAL_ERROR';
 
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isInternal = statusCode >= 500;
+
+  const safeMessage = isProduction && isInternal
+    ? 'An unexpected internal error occurred'
+    : err.message || 'An unexpected error occurred';
+
   res.status(statusCode).json({
     error: {
       code,
-      message: err.message || 'An unexpected error occurred',
-      details: err.details || [],
+      message: safeMessage,
+      details: isProduction && isInternal ? [] : err.details || [],
     },
   });
 };

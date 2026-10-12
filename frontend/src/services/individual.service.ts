@@ -194,3 +194,73 @@ export const individualApi = {
   checkEligibility: (getToken: () => Promise<string | null>) =>
     apiRequest<EligibilityResult>('/individual/eligibility/check', { method: 'POST', body: JSON.stringify({}) }, getToken),
 };
+
+export interface FilingResult {
+  id: string;
+  status: string;
+  ackNumber?: string | null;
+  transactionId?: string | null;
+  filedAt?: string | null;
+  verificationStatus: string;
+  metadata?: any;
+}
+
+export const filingApi = {
+  fileReturn: (getToken: () => Promise<string | null>, returnId: string) =>
+    apiRequest<FilingResult>(`/tax-returns/${returnId}/file`, { method: 'POST' }, getToken),
+
+  reconcileFiling: (getToken: () => Promise<string | null>, returnId: string) =>
+    apiRequest<FilingResult>(`/tax-returns/${returnId}/reconcile`, { method: 'POST' }, getToken),
+
+  getReturnStatus: (getToken: () => Promise<string | null>) =>
+    apiRequest<{ status: string; taxReturn: any; incomeCount?: number; deductionCount?: number; documentCount?: number }>('/individual/return/status', { method: 'GET' }, getToken),
+};
+
+export interface VerificationAttemptRecord {
+  id: string;
+  taxReturnId: string;
+  method: string;
+  status: string;
+  requestedAt: string;
+  completedAt?: string | null;
+  providerReference?: string | null;
+  errorCategory?: string | null;
+  errorDetail?: string | null;
+}
+
+export interface VerificationHistoryResponse {
+  taxReturnId: string;
+  filingStatus: string;
+  verificationStatus: string;
+  attempts: VerificationAttemptRecord[];
+}
+
+export const verificationApi = {
+  initiateVerification: (getToken: () => Promise<string | null>, returnId: string, method: string) =>
+    apiRequest<{ message: string; attemptId: string; method: string; status: string }>(
+      `/tax-returns/${returnId}/verify/initiate`,
+      { method: 'POST', body: JSON.stringify({ method }) },
+      getToken
+    ),
+
+  submitOtp: (getToken: () => Promise<string | null>, returnId: string, otp: string) =>
+    apiRequest<{ message: string; verificationStatus: string }>(
+      `/tax-returns/${returnId}/verify/submit`,
+      { method: 'POST', body: JSON.stringify({ otp }) },
+      getToken
+    ),
+
+  reconcileVerification: (getToken: () => Promise<string | null>, returnId: string) =>
+    apiRequest<{ message: string; verificationStatus: string }>(
+      `/tax-returns/${returnId}/verify/reconcile`,
+      { method: 'POST' },
+      getToken
+    ),
+
+  getHistory: (getToken: () => Promise<string | null>, returnId: string) =>
+    apiRequest<VerificationHistoryResponse>(
+      `/tax-returns/${returnId}/verification`,
+      { method: 'GET' },
+      getToken
+    ),
+};

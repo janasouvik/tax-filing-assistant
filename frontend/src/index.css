@@ -6,8 +6,7 @@
   html, body {
     margin: 0;
     padding: 0;
-    background-color: #F7F5F1;
-    color: #171310;
+    @apply bg-app-bg dark:bg-app-dark text-app-text-primary dark:text-app-surface transition-colors;
     font-family: 'Geist', sans-serif;
     -webkit-font-smoothing: antialiased;
   }

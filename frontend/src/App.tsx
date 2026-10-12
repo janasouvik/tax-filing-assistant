@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import SMETaxDashboard from './pages/SMETaxDashboard';
 import TaxReviewValidation from './pages/TaxReviewValidation';
 import ForSMEs from './pages/ForSMEs';
@@ -39,6 +39,7 @@ function App() {
         <Route path="/smetaxdashboard" element={<SMETaxDashboard />} />
         <Route path="/taxreviewvalidation" element={<TaxReviewValidation />} />
         <Route path="/smes" element={<ForSMEs />} />
+        <Route path="/for-smes" element={<ForSMEs />} />
         <Route path="/taxcalendarcompliancedeadlines" element={<TaxCalendarComplianceDeadlines />} />
         <Route path="/taxpreparationdocumentocr" element={<TaxPreparationDocumentOCR />} />
         <Route path="/individualtaxdashboard" element={<IndividualTaxDashboard />} />
@@ -46,8 +47,10 @@ function App() {
         <Route path="/pricingplans" element={<PricingPlans />} />
         <Route path="/usertaxmanagementdashboard2" element={<UserTaxManagementDashboard2 />} />
         <Route path="/individuals" element={<ForIndividuals />} />
+        <Route path="/for-individuals" element={<ForIndividuals />} />
         <Route path="/documentvaultefilinghistory" element={<DocumentVaultEFilingHistory />} />
         <Route path="/howitworks" element={<HowItWorks />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/" element={<Home />} />
         <Route path="/cafirmpracticedashboardmulticlientcockpit" element={<CAFirmPracticeDashboardMultiClientCockpit />} />
         <Route path="/taxcalculationengineslabsoldvsnewregime" element={<TaxCalculationEngineSlabsOldvsNewRegime />} />
@@ -55,6 +58,8 @@ function App() {
         <Route path="/sign-up/*" element={<SignUpPage />} />
         <Route path="/dashboard-router" element={<DashboardRouter />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/start-filing" element={<Navigate to="/individual" replace />} />
+        <Route path="/get-started" element={<Navigate to="/sign-up" replace />} />
 
         {/* ── Individual filing workflow (new) ── */}
         <Route path="/individual" element={<IndividualTaxDashboard />} />
@@ -64,12 +69,18 @@ function App() {
         <Route path="/individual/eligibility" element={<ITREligibility />} />
         <Route path="/individual/documents" element={<DocumentCollection />} />
         <Route path="/individual/income" element={<IncomeDeductions />} />
+        <Route path="/individual/income-deductions" element={<IncomeDeductions />} />
         <Route path="/individual/deductions" element={<IncomeDeductions />} />
         <Route path="/individual/tax" element={<TaxCalculation />} />
+        <Route path="/individual/tax-calculation" element={<TaxCalculation />} />
         <Route path="/individual/validation" element={<ValidationPage />} />
         <Route path="/individual/review" element={<FinalReview />} />
         <Route path="/individual/filing" element={<FilingReady />} />
+        <Route path="/individual/filing-ready" element={<FilingReady />} />
         <Route path="/individual/everify" element={<FilingReady />} />
+
+        {/* ── Catch-all 404 fallback ── */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

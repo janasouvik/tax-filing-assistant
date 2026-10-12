@@ -46,4 +46,25 @@ export const config = {
     clientSecret: process.env.SETU_CLIENT_SECRET || '',
     productInstanceId: process.env.SETU_PRODUCT_INSTANCE_ID || '',
   },
+  sandbox: {
+    apiKey: process.env.SANDBOX_API_KEY || '',
+    apiSecret: process.env.SANDBOX_API_SECRET || '',
+    baseUrl: process.env.SANDBOX_BASE_URL || 'https://test-api.sandbox.co.in',
+  }
+};
+
+export const validateSandboxConfig = () => {
+  const { apiKey, apiSecret, baseUrl } = config.sandbox;
+  
+  if (!apiKey || !apiSecret) {
+    throw new Error('Sandbox credentials (SANDBOX_API_KEY and/or SANDBOX_API_SECRET) are missing. Please configure them in the .env file.');
+  }
+  
+  try {
+    new URL(baseUrl);
+  } catch (error) {
+    throw new Error(`Invalid SANDBOX_BASE_URL: ${baseUrl}. It must be a valid URL.`);
+  }
+  
+  return { apiKey, apiSecret, baseUrl };
 };

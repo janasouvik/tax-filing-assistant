@@ -135,3 +135,45 @@ export const approveController = asyncHandler(async (req: AuthRequest, res: Resp
   const data = await approveReturn((req.params.returnId as string), req.user!.userId, ip, req.body.notes);
   res.json(successResponse(data));
 });
+
+import { executeItrFiling } from '../services/filing.service';
+
+export const fileReturnController = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const data = await executeItrFiling((req.params.returnId as string), req.user!.userId);
+  res.json(successResponse(data));
+});
+
+import { reconcileFilingStatus } from '../services/filing.service';
+
+export const reconcileFilingController = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const data = await reconcileFilingStatus((req.params.returnId as string), req.user!.userId);
+  res.json(successResponse(data));
+});
+
+import {
+  initiateVerification,
+  submitVerificationOtp,
+  reconcileVerificationStatus,
+  getVerificationHistory
+} from '../services/verification.service';
+
+export const initiateVerificationController = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const data = await initiateVerification((req.params.returnId as string), req.user!.userId, req.body.method);
+  res.status(202).json(successResponse(data));
+});
+
+export const submitVerificationOtpController = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const data = await submitVerificationOtp((req.params.returnId as string), req.user!.userId, req.body.otp);
+  res.json(successResponse(data));
+});
+
+export const reconcileVerificationController = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const data = await reconcileVerificationStatus((req.params.returnId as string), req.user!.userId);
+  res.json(successResponse(data));
+});
+
+export const getVerificationHistoryController = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const data = await getVerificationHistory((req.params.returnId as string), req.user!.userId);
+  res.json(successResponse(data));
+});
+

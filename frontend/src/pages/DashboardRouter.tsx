@@ -59,11 +59,11 @@ export default function DashboardRouter() {
   }, [isLoaded, user]); // eslint-disable-next-line react-hooks/exhaustive-deps
 
   if (error) {
-    return <div className="flex h-screen items-center justify-center bg-app-bg text-app-error">{error}</div>;
+    return <div className="flex h-screen items-center justify-center bg-app-bg dark:bg-app-dark text-app-error">{error}</div>;
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-app-bg">
+    <div className="flex h-screen items-center justify-center bg-app-bg dark:bg-app-dark">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
     </div>
   );

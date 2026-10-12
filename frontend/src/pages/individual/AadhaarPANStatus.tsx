@@ -15,8 +15,8 @@ const STATUS_UI: Record<string, { icon: string; iconColor: string; title: string
   NOT_LINKED:         { icon: 'warning',        iconColor: 'text-[#C2410C]',    title: 'Action Required',            description: 'Your PAN-Aadhaar linkage could not be confirmed.',                 variant: 'action-required', bg: 'bg-[#FEF3EC]',      border: 'border-[#C2410C]/30' },
   FAILED:             { icon: 'cancel',         iconColor: 'text-app-error',    title: 'Linkage Validation Failed',  description: 'Aadhaar-PAN linkage validation failed.',                            variant: 'failed',          bg: 'bg-[#FFF1F0]',      border: 'border-app-error/30' },
   PAN_INOPERATIVE:    { icon: 'warning',        iconColor: 'text-app-warning',  title: 'PAN Inoperative',            description: 'Your PAN appears to be inoperative. Resolve on the IT portal.',   variant: 'action-required', bg: 'bg-app-warning-bg', border: 'border-app-warning/30' },
-  UNKNOWN:            { icon: 'help_outline',   iconColor: 'text-app-text-muted', title: 'Status Unknown',           description: 'Unable to determine current Aadhaar-PAN link status.',             variant: 'unknown',         bg: 'bg-gray-50',        border: 'border-gray-200' },
-  SERVICE_UNAVAILABLE:{ icon: 'cloud_off',      iconColor: 'text-app-text-muted', title: 'Service Unavailable',      description: 'The Aadhaar-PAN status service is temporarily unavailable.',        variant: 'unknown',         bg: 'bg-gray-50',        border: 'border-gray-200' },
+  UNKNOWN:            { icon: 'help_outline',   iconColor: 'text-app-text-muted dark:text-gray-400', title: 'Status Unknown',           description: 'Unable to determine current Aadhaar-PAN link status.',             variant: 'unknown',         bg: 'bg-gray-50 dark:bg-gray-900',        border: 'border-gray-200 dark:border-gray-700' },
+  SERVICE_UNAVAILABLE:{ icon: 'cloud_off',      iconColor: 'text-app-text-muted dark:text-gray-400', title: 'Service Unavailable',      description: 'The Aadhaar-PAN status service is temporarily unavailable.',        variant: 'unknown',         bg: 'bg-gray-50 dark:bg-gray-900',        border: 'border-gray-200 dark:border-gray-700' },
 };
 
 export default function AadhaarPANStatusPage() {
@@ -110,15 +110,15 @@ export default function AadhaarPANStatusPage() {
     <IndividualLayout currentStep={3}>
       <div className="space-y-6">
         {/* Main card */}
-        <div className="bg-app-surface border border-app-border rounded-xl p-8 shadow-xs">
+        <div className="bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-8 shadow-xs">
           {/* Header */}
           <div className="mb-7">
             <div className="flex items-center gap-2 mb-1">
               <span className="material-symbols-outlined text-[20px] text-app-accent">fingerprint</span>
-              <p className="text-[12px] font-semibold text-app-text-muted uppercase tracking-wider">Step 3 of 12</p>
+              <p className="text-[12px] font-semibold text-app-text-muted dark:text-gray-400 uppercase tracking-wider">Step 3 of 12</p>
             </div>
-            <h1 className="font-serif text-[32px] text-app-text-primary font-normal">Aadhaar & PAN Status</h1>
-            <p className="text-[15px] text-app-text-secondary mt-1">
+            <h1 className="font-serif text-[32px] text-app-text-primary dark:text-app-surface font-normal">Aadhaar & PAN Status</h1>
+            <p className="text-[15px] text-app-text-secondary dark:text-gray-300 mt-1">
               This checks whether your PAN and Aadhaar are linked as required by the Income Tax Department.
             </p>
           </div>
@@ -146,8 +146,8 @@ export default function AadhaarPANStatusPage() {
             <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-[20px] text-app-success" style={{ fontVariationSettings: "'FILL' 1" }}>verified_user</span>
               <div>
-                <p className="text-[14px] font-semibold text-app-text-primary">PAN</p>
-                {panMasked && <p className="text-[13px] font-mono text-app-text-secondary">{panMasked}</p>}
+                <p className="text-[14px] font-semibold text-app-text-primary dark:text-app-surface">PAN</p>
+                {panMasked && <p className="text-[13px] font-mono text-app-text-secondary dark:text-gray-300">{panMasked}</p>}
               </div>
             </div>
             <StatusBadge variant={panVerified ? 'verified' : 'pending'} label={panVerified ? 'Verified' : 'Pending'} size="sm" />
@@ -157,24 +157,24 @@ export default function AadhaarPANStatusPage() {
           {aadhaarResult && statusUi ? (
             <div className={`rounded-xl border-2 p-6 ${statusUi.bg} ${statusUi.border} mb-6`}>
               <div className="flex items-start gap-4">
-                <div className={`w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0`}>
+                <div className={`w-12 h-12 rounded-full bg-white dark:bg-app-dark-card flex items-center justify-center shrink-0`}>
                   <span className={`material-symbols-outlined text-[24px] ${statusUi.iconColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>
                     {statusUi.icon}
                   </span>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1.5">
-                    <h2 className="text-[18px] font-semibold text-app-text-primary">{statusUi.title}</h2>
+                    <h2 className="text-[18px] font-semibold text-app-text-primary dark:text-app-surface">{statusUi.title}</h2>
                     <StatusBadge variant={statusUi.variant} size="sm" />
                   </div>
-                  <p className="text-[14px] text-app-text-secondary leading-relaxed">{statusUi.description}</p>
+                  <p className="text-[14px] text-app-text-secondary dark:text-gray-300 leading-relaxed">{statusUi.description}</p>
 
                   {aadhaarResult.isSandbox && (
                     <p className="text-[12px] text-purple-600 font-medium mt-2">DEMO / SANDBOX — Not a real government verification</p>
                   )}
 
                   {aadhaarResult.checkedAt && (
-                    <p className="text-[12px] text-app-text-muted mt-2">
+                    <p className="text-[12px] text-app-text-muted dark:text-gray-400 mt-2">
                       Checked: {new Date(aadhaarResult.checkedAt).toLocaleString('en-IN')}
                     </p>
                   )}
@@ -188,7 +188,7 @@ export default function AadhaarPANStatusPage() {
                     href={INCOME_TAX_PORTAL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#C2410C] text-[#C2410C] hover:bg-white text-[13px] font-medium transition-all"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[#C2410C] text-[#C2410C] hover:bg-white dark:bg-app-dark-card text-[13px] font-medium transition-all"
                   >
                     <span className="material-symbols-outlined text-[16px]">open_in_new</span>
                     Resolve on Income Tax Portal
@@ -196,11 +196,11 @@ export default function AadhaarPANStatusPage() {
                   <button
                     onClick={handleCheck}
                     disabled={checking}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-app-border text-app-text-secondary hover:bg-white text-[13px] font-medium transition-all disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-white dark:bg-app-dark-card text-[13px] font-medium transition-all disabled:opacity-50"
                     type="button"
                   >
                     {checking ? (
-                      <span className="w-4 h-4 border-2 border-app-border border-t-primary rounded-full animate-spin" />
+                      <span className="w-4 h-4 border-2 border-app-border dark:border-app-dark-border border-t-primary rounded-full animate-spin" />
                     ) : (
                       <span className="material-symbols-outlined text-[15px]">refresh</span>
                     )}
@@ -211,9 +211,9 @@ export default function AadhaarPANStatusPage() {
             </div>
           ) : (
             /* No status yet — show check button */
-            <div className="text-center py-10 border-2 border-dashed border-app-border rounded-xl mb-6">
-              <span className="material-symbols-outlined text-[48px] text-app-text-muted block mb-3">fingerprint</span>
-              <p className="text-[15px] text-app-text-secondary mb-5">Check your Aadhaar-PAN linkage status</p>
+            <div className="text-center py-10 border-2 border-dashed border-app-border dark:border-app-dark-border rounded-xl mb-6">
+              <span className="material-symbols-outlined text-[48px] text-app-text-muted dark:text-gray-400 block mb-3">fingerprint</span>
+              <p className="text-[15px] text-app-text-secondary dark:text-gray-300 mb-5">Check your Aadhaar-PAN linkage status</p>
               <button
                 onClick={handleCheck}
                 disabled={isCheckDisabled}
@@ -233,16 +233,16 @@ export default function AadhaarPANStatusPage() {
                 )}
               </button>
               {disabledReason && (
-                <p className="text-[12px] text-app-text-muted mt-3">{disabledReason}</p>
+                <p className="text-[12px] text-app-text-muted dark:text-gray-400 mt-3">{disabledReason}</p>
               )}
             </div>
           )}
 
           {/* Action footer */}
-          <div className="flex items-center justify-between pt-2 border-t border-app-border-light">
+          <div className="flex items-center justify-between pt-2 border-t border-app-border dark:border-app-dark-border-light">
             <button
               onClick={() => navigate('/individual/pan')}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[14px] font-medium transition-all"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-app-bg dark:bg-app-dark text-[14px] font-medium transition-all"
               type="button"
             >
               <span className="material-symbols-outlined text-[16px]">arrow_back</span>
@@ -253,7 +253,7 @@ export default function AadhaarPANStatusPage() {
                 <button
                   onClick={handleCheck}
                   disabled={isCheckDisabled}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[14px] font-medium transition-all disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-app-bg dark:bg-app-dark text-[14px] font-medium transition-all disabled:opacity-50"
                   type="button"
                 >
                   {checking ? 'Checking...' : 'Check Status'}

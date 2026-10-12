@@ -254,7 +254,7 @@ export default function ForIndividuals() {
 <span>Source: Form_16_Part_B_Infosys.pdf</span>
 <span className="text-primary font-mono text-[10px]">p. 02 / § 17(1)</span>
 </div>
-<div className="p-3 bg-white rounded border border-outline-variant font-mono text-[11px] text-on-surface space-y-2 leading-relaxed opacity-90 shadow-sm">
+<div className="p-3 bg-white dark:bg-app-dark-card rounded border border-outline-variant font-mono text-[11px] text-on-surface space-y-2 leading-relaxed opacity-90 shadow-sm">
 <div className="border-b border-dashed border-outline-variant pb-1.5">
 <span className="text-secondary">1. Gross Salary:</span><br/>
                 (a) Salary as per Sec 17(1): <span className="font-semibold text-on-surface">₹ 21,80,000</span><br/>
@@ -277,7 +277,7 @@ export default function ForIndividuals() {
 </div>
 </div>
 
-<div className="p-5 bg-white">
+<div className="p-5 bg-white dark:bg-app-dark-card">
 <div className="text-[11px] font-label-caps uppercase tracking-wider text-secondary mb-3 flex items-center justify-between">
 <span>Normalized Tax Schedule</span>
 <span className="text-secondary font-mono text-[10px]">JSON Tree</span>

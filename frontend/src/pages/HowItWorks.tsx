@@ -56,7 +56,7 @@ export default function HowItWorks() {
 <section className="w-full bg-[#EFEAE3] border-b border-[#D8D1C9] py-8 sticky top-16 z-40 backdrop-blur-sm bg-opacity-95" id="pipeline">
 <div className="max-w-7xl mx-auto px-6 lg:px-12">
 <div className="flex items-center justify-between overflow-x-auto no-scrollbar gap-4 pb-2 lg:pb-0">
-<a className="group flex items-center gap-3 shrink-0 py-1.5 px-3 rounded hover:bg-white/60 transition-colors" href="#stage-01">
+<a className="group flex items-center gap-3 shrink-0 py-1.5 px-3 rounded hover:bg-white dark:bg-app-dark-card/60 transition-colors" href="#stage-01">
 <span className="font-label-caps text-label-caps text-xs px-2 py-0.5 rounded bg-[#24170F] text-[#EEE3D6]">01</span>
 <div className="flex flex-col">
 <span className="font-label-caps text-label-caps uppercase font-semibold text-[#171310] tracking-wide text-xs">Upload</span>
@@ -64,7 +64,7 @@ export default function HowItWorks() {
 </div>
 </a>
 <span className="material-symbols-outlined text-[#84746C] text-[16px] shrink-0">chevron_right</span>
-<a className="group flex items-center gap-3 shrink-0 py-1.5 px-3 rounded hover:bg-white/60 transition-colors" href="#stage-02">
+<a className="group flex items-center gap-3 shrink-0 py-1.5 px-3 rounded hover:bg-white dark:bg-app-dark-card/60 transition-colors" href="#stage-02">
 <span className="font-label-caps text-label-caps text-xs px-2 py-0.5 rounded bg-[#24170F] text-[#EEE3D6]">02</span>
 <div className="flex flex-col">
 <span className="font-label-caps text-label-caps uppercase font-semibold text-[#171310] tracking-wide text-xs">Extract</span>
@@ -72,7 +72,7 @@ export default function HowItWorks() {
 </div>
 </a>
 <span className="material-symbols-outlined text-[#84746C] text-[16px] shrink-0">chevron_right</span>
-<a className="group flex items-center gap-3 shrink-0 py-1.5 px-3 rounded hover:bg-white/60 transition-colors" href="#stage-03">
+<a className="group flex items-center gap-3 shrink-0 py-1.5 px-3 rounded hover:bg-white dark:bg-app-dark-card/60 transition-colors" href="#stage-03">
 <span className="font-label-caps text-label-caps text-xs px-2 py-0.5 rounded bg-[#24170F] text-[#EEE3D6]">03</span>
 <div className="flex flex-col">
 <span className="font-label-caps text-label-caps uppercase font-semibold text-[#171310] tracking-wide text-xs">Calculate</span>
@@ -80,7 +80,7 @@ export default function HowItWorks() {
 </div>
 </a>
 <span className="material-symbols-outlined text-[#84746C] text-[16px] shrink-0">chevron_right</span>
-<a className="group flex items-center gap-3 shrink-0 py-1.5 px-3 rounded hover:bg-white/60 transition-colors" href="#stage-04">
+<a className="group flex items-center gap-3 shrink-0 py-1.5 px-3 rounded hover:bg-white dark:bg-app-dark-card/60 transition-colors" href="#stage-04">
 <span className="font-label-caps text-label-caps text-xs px-2 py-0.5 rounded bg-[#24170F] text-[#EEE3D6]">04</span>
 <div className="flex flex-col">
 <span className="font-label-caps text-label-caps uppercase font-semibold text-[#171310] tracking-wide text-xs">Validate</span>
@@ -88,7 +88,7 @@ export default function HowItWorks() {
 </div>
 </a>
 <span className="material-symbols-outlined text-[#84746C] text-[16px] shrink-0">chevron_right</span>
-<a className="group flex items-center gap-3 shrink-0 py-1.5 px-3 rounded hover:bg-white/60 transition-colors" href="#stage-05">
+<a className="group flex items-center gap-3 shrink-0 py-1.5 px-3 rounded hover:bg-white dark:bg-app-dark-card/60 transition-colors" href="#stage-05">
 <span className="font-label-caps text-label-caps text-xs px-2 py-0.5 rounded bg-[#24170F] text-[#EEE3D6]">05</span>
 <div className="flex flex-col">
 <span className="font-label-caps text-label-caps uppercase font-semibold text-[#171310] tracking-wide text-xs">Review</span>
@@ -96,7 +96,7 @@ export default function HowItWorks() {
 </div>
 </a>
 <span className="material-symbols-outlined text-[#84746C] text-[16px] shrink-0">chevron_right</span>
-<a className="group flex items-center gap-3 shrink-0 py-1.5 px-3 rounded hover:bg-white/60 transition-colors" href="#stage-06">
+<a className="group flex items-center gap-3 shrink-0 py-1.5 px-3 rounded hover:bg-white dark:bg-app-dark-card/60 transition-colors" href="#stage-06">
 <span className="font-label-caps text-label-caps text-xs px-2 py-0.5 rounded bg-[#8A5A3C] text-white">06</span>
 <div className="flex flex-col">
 <span className="font-label-caps text-label-caps uppercase font-semibold text-[#171310] tracking-wide text-xs">Approve</span>
@@ -134,7 +134,7 @@ export default function HowItWorks() {
 </div>
 
 <div className="lg:col-span-7">
-<div className="bg-white rounded border border-[#D8D1C9] shadow-sm overflow-hidden">
+<div className="bg-white dark:bg-app-dark-card rounded border border-[#D8D1C9] shadow-sm overflow-hidden">
 <div className="bg-[#EFEAE3] px-6 py-4 border-b border-[#D8D1C9] flex items-center justify-between">
 <div className="flex items-center gap-2">
 <span className="material-symbols-outlined text-[#6D5B50] text-[18px]">folder_zip</span>
@@ -297,7 +297,7 @@ export default function HowItWorks() {
 </div>
 
 <div className="lg:col-span-7">
-<div className="bg-white rounded border border-[#D8D1C9] shadow-sm overflow-hidden">
+<div className="bg-white dark:bg-app-dark-card rounded border border-[#D8D1C9] shadow-sm overflow-hidden">
 <div className="bg-[#EFEAE3] px-6 py-4 border-b border-[#D8D1C9] flex items-center justify-between">
 <span className="font-label-caps text-label-caps uppercase text-[#171310] tracking-wider">Parallel Engine Output · AY 2026–27</span>
 <span className="font-label-caps text-label-caps text-[#8A5A3C] font-bold text-[11px]">DELTA: ₹ 54,620 SAVED</span>
@@ -319,7 +319,7 @@ export default function HowItWorks() {
 </div>
 </div>
 
-<div className="p-4 rounded border border-[#D8D1C9] bg-white opacity-80">
+<div className="p-4 rounded border border-[#D8D1C9] bg-white dark:bg-app-dark-card opacity-80">
 <div className="flex items-center justify-between mb-2">
 <span className="font-label-caps text-label-caps font-semibold text-[#6D5B50]">Old Tax Regime</span>
 <span className="font-label-caps text-label-caps text-[#84746C] text-[10px]">ALTERNATIVE</span>
@@ -457,11 +457,11 @@ export default function HowItWorks() {
             Never wonder where a deduction came from. Click any row in the TaxPilot schedule to reveal its cryptographic source path, relevant section in the Indian Income Tax Act 1961, and contextual AI rationale explaining why this calculation is audit-safe.
           </p>
 <div className="space-y-3 pt-2">
-<div className="p-3 bg-white rounded border border-[#D8D1C9] flex items-center gap-3">
+<div className="p-3 bg-white dark:bg-app-dark-card rounded border border-[#D8D1C9] flex items-center gap-3">
 <span className="material-symbols-outlined text-[#4F6B52]">verified</span>
 <span className="font-body-sm text-body-sm text-[#171310]">Click-to-highlight source line on uploaded PDF facsimile</span>
 </div>
-<div className="p-3 bg-white rounded border border-[#D8D1C9] flex items-center gap-3">
+<div className="p-3 bg-white dark:bg-app-dark-card rounded border border-[#D8D1C9] flex items-center gap-3">
 <span className="material-symbols-outlined text-[#8A5A3C]">psychology</span>
 <span className="font-body-sm text-body-sm text-[#171310]">Statutory references directly cited from CBDT circulars</span>
 </div>
@@ -469,7 +469,7 @@ export default function HowItWorks() {
 </div>
 
 <div className="lg:col-span-7">
-<div className="bg-white rounded border border-[#D8D1C9] shadow-sm overflow-hidden">
+<div className="bg-white dark:bg-app-dark-card rounded border border-[#D8D1C9] shadow-sm overflow-hidden">
 <div className="bg-[#EFEAE3] px-6 py-4 border-b border-[#D8D1C9] flex items-center justify-between">
 <span className="font-label-caps text-label-caps uppercase text-[#171310] tracking-wider">Schedule VIA &amp; NPS Inspector</span>
 <span className="font-label-caps text-label-caps text-[#8A5A3C] font-mono text-xs">AY 2026–27 / ITR-2</span>
@@ -544,7 +544,7 @@ export default function HowItWorks() {
         </p>
 </div>
 
-<div className="max-w-3xl mx-auto bg-white rounded border border-[#D8D1C9] shadow-sm p-8 space-y-6">
+<div className="max-w-3xl mx-auto bg-white dark:bg-app-dark-card rounded border border-[#D8D1C9] shadow-sm p-8 space-y-6">
 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#D8D1C9] gap-4">
 <div>
 <div className="font-headline-sm text-headline-sm font-serif text-[#171310]">ITR-2 Filing Manifest</div>
@@ -581,7 +581,7 @@ export default function HowItWorks() {
 <span className="font-body-sm text-[12px] text-[#51443D]">Direct ITD API handshake ready via NSDL / Protean gateway</span>
 </div>
 <div className="flex items-center gap-3">
-<button className="bg-white hover:bg-[#EFEAE3] text-[#171310] font-body-sm text-body-sm px-4 py-2 rounded border border-[#D8D1C9]">
+<button className="bg-white dark:bg-app-dark-card hover:bg-[#EFEAE3] text-[#171310] font-body-sm text-body-sm px-4 py-2 rounded border border-[#D8D1C9]">
               Download ITD JSON
             </button>
 <button className="bg-[#8A5A3C] hover:bg-[#784E34] text-white font-body-sm text-body-sm px-5 py-2 rounded border border-[#784E34]">
@@ -601,7 +601,7 @@ export default function HowItWorks() {
           How TaxPilot compares across three fiscal preparation paradigms.
         </h2>
 </div>
-<div className="bg-white rounded border border-[#D8D1C9] shadow-sm overflow-x-auto">
+<div className="bg-white dark:bg-app-dark-card rounded border border-[#D8D1C9] shadow-sm overflow-x-auto">
 <table className="w-full text-left font-body-sm text-[13px] border-collapse min-w-[700px]">
 <thead>
 <tr className="bg-[#EFEAE3] border-b border-[#D8D1C9]">

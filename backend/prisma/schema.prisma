@@ -24,6 +24,16 @@ enum TaxReturnStatus {
   USER_REVIEW
   APPROVED
   FILED
+  SUBMISSION_FAILED
+  SUBMISSION_UNKNOWN
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  FAILED
+  UNKNOWN
 }
 
 enum TaxReturnType {
@@ -104,6 +114,12 @@ enum DeductionSection {
 enum TaxRegime {
   OLD
   NEW
+}
+
+enum ApprovalStatus {
+  ACTIVE
+  SUPERSEDED
+  INVALIDATED
 }
 
 enum AuditAction {
@@ -243,6 +259,10 @@ model TaxReturn {
   status      TaxReturnStatus @default(DRAFT)
   regime      TaxRegime       @default(NEW)
   readinessScore Int         @default(0)
+  ackNumber   String?
+  transactionId String?
+  filedAt     DateTime?
+  verificationStatus VerificationStatus @default(UNVERIFIED)
   metadata    Json?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
@@ -255,9 +275,46 @@ model TaxReturn {
   validationIssues ValidationIssue[]
   taxSavings       TaxSaving[]
   reviews          Review[]
-  approval         Approval?
+  approvals        Approval[]
+  filingAttempts   FilingAttempt[]
+  verificationAttempts VerificationAttempt[]
 
   @@index([workspaceId])
+  @@index([status])
+  @@index([verificationStatus])
+}
+
+model FilingAttempt {
+  id              String   @id @default(uuid())
+  taxReturnId     String
+  status          String   // DISPATCHED, SUCCESS, FAILED, UNKNOWN
+  dispatchedAt    DateTime @default(now())
+  respondedAt     DateTime?
+  ackNumber       String?
+  transactionId   String?
+  errorCategory   String?
+  errorDetail     String?
+
+  taxReturn       TaxReturn @relation(fields: [taxReturnId], references: [id], onDelete: Cascade)
+
+  @@index([taxReturnId])
+  @@index([status])
+}
+
+model VerificationAttempt {
+  id              String   @id @default(uuid())
+  taxReturnId     String
+  method          String   // AADHAAR_OTP, EVC_NETBANKING, etc.
+  status          String   // INITIATED, SUCCESS, FAILED, UNKNOWN
+  requestedAt     DateTime @default(now())
+  completedAt     DateTime?
+  providerReference String?
+  errorCategory   String?
+  errorDetail     String?
+
+  taxReturn       TaxReturn @relation(fields: [taxReturnId], references: [id], onDelete: Cascade)
+
+  @@index([taxReturnId])
   @@index([status])
 }
 
@@ -561,15 +618,21 @@ model Review {
 }
 
 model Approval {
-  id           String   @id @default(uuid())
-  taxReturnId  String   @unique
-  approvedBy   String
-  ipAddress    String?
-  approvalHash String
-  notes        String?
-  approvedAt   DateTime @default(now())
+  id                 String         @id @default(uuid())
+  taxReturnId        String
+  approvedBy         String
+  ipAddress          String?
+  approvalHash       String
+  notes              String?
+  status             ApprovalStatus @default(ACTIVE)
+  invalidatedAt      DateTime?
+  invalidationReason String?
+  approvedAt         DateTime       @default(now())
 
   taxReturn TaxReturn @relation(fields: [taxReturnId], references: [id], onDelete: Cascade)
+
+  @@index([taxReturnId])
+  @@index([taxReturnId, status])
 }
 
 model AuditLog {

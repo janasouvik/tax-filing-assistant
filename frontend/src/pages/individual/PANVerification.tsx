@@ -117,15 +117,15 @@ export default function PANVerificationPage() {
 
   return (
     <IndividualLayout currentStep={2}>
-      <div className="bg-app-surface border border-app-border rounded-xl p-8 shadow-xs">
+      <div className="bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-8 shadow-xs">
         {/* Header */}
         <div className="mb-7">
           <div className="flex items-center gap-2 mb-1">
             <span className="material-symbols-outlined text-[20px] text-app-accent">verified_user</span>
-            <p className="text-[12px] font-semibold text-app-text-muted uppercase tracking-wider">Step 2 of 12</p>
+            <p className="text-[12px] font-semibold text-app-text-muted dark:text-gray-400 uppercase tracking-wider">Step 2 of 12</p>
           </div>
-          <h1 className="font-serif text-[32px] text-app-text-primary font-normal">Verify your PAN</h1>
-          <p className="text-[15px] text-app-text-secondary mt-1">
+          <h1 className="font-serif text-[32px] text-app-text-primary dark:text-app-surface font-normal">Verify your PAN</h1>
+          <p className="text-[15px] text-app-text-secondary dark:text-gray-300 mt-1">
             Let's verify your PAN before preparing your return.
           </p>
         </div>
@@ -145,7 +145,7 @@ export default function PANVerificationPage() {
                   <span className="material-symbols-outlined text-[20px] text-white" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                 </span>
                 <div>
-                  <h2 className="text-[18px] font-semibold text-app-text-primary">PAN Verified</h2>
+                  <h2 className="text-[18px] font-semibold text-app-text-primary dark:text-app-surface">PAN Verified</h2>
                   {result.isSandbox && (
                     <p className="text-[12px] text-purple-600 font-medium">DEMO / SANDBOX — Not a real government verification</p>
                   )}
@@ -154,20 +154,20 @@ export default function PANVerificationPage() {
 
               <div className="grid grid-cols-2 gap-4 text-[14px]">
                 <div>
-                  <p className="text-[12px] text-app-text-muted uppercase tracking-wider font-semibold mb-1">PAN</p>
-                  <p className="font-mono text-app-text-primary text-[16px] font-medium">{maskPanDisplay(result.pan || pan)}</p>
+                  <p className="text-[12px] text-app-text-muted dark:text-gray-400 uppercase tracking-wider font-semibold mb-1">PAN</p>
+                  <p className="font-mono text-app-text-primary dark:text-app-surface text-[16px] font-medium">{maskPanDisplay(result.pan || pan)}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-app-text-muted uppercase tracking-wider font-semibold mb-1">PAN Status</p>
-                  <p className="text-app-text-primary font-medium">{result.status || 'ACTIVE'}</p>
+                  <p className="text-[12px] text-app-text-muted dark:text-gray-400 uppercase tracking-wider font-semibold mb-1">PAN Status</p>
+                  <p className="text-app-text-primary dark:text-app-surface font-medium">{result.status || 'ACTIVE'}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-app-text-muted uppercase tracking-wider font-semibold mb-1">Name</p>
-                  <p className="text-app-text-primary font-medium">{result.name || name}</p>
+                  <p className="text-[12px] text-app-text-muted dark:text-gray-400 uppercase tracking-wider font-semibold mb-1">Name</p>
+                  <p className="text-app-text-primary dark:text-app-surface font-medium">{result.name || name}</p>
                 </div>
                 <div>
-                  <p className="text-[12px] text-app-text-muted uppercase tracking-wider font-semibold mb-1">Date of Birth</p>
-                  <p className="text-app-text-primary font-medium">{result.dob || dob}</p>
+                  <p className="text-[12px] text-app-text-muted dark:text-gray-400 uppercase tracking-wider font-semibold mb-1">Date of Birth</p>
+                  <p className="text-app-text-primary dark:text-app-surface font-medium">{result.dob || dob}</p>
                 </div>
               </div>
 
@@ -195,7 +195,7 @@ export default function PANVerificationPage() {
             <div className="flex items-center justify-between pt-2">
               <button
                 onClick={handleReset}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[14px] font-medium transition-all"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-app-bg dark:bg-app-dark text-[14px] font-medium transition-all"
                 type="button"
               >
                 Re-verify PAN
@@ -225,7 +225,7 @@ export default function PANVerificationPage() {
             <div className="space-y-5">
                   {/* PAN */}
                   <div>
-                    <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="pan">
+                    <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-1.5" htmlFor="pan">
                       PAN <span className="text-app-error">*</span>
                     </label>
                     <input
@@ -240,15 +240,15 @@ export default function PANVerificationPage() {
                       placeholder="ABCDE1234F"
                       maxLength={10}
                       disabled={state === 'loading'}
-                      className={`w-full font-mono px-3.5 py-2.5 rounded-lg border text-[16px] bg-white text-app-text-primary placeholder-app-text-muted outline-none uppercase tracking-widest transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60 disabled:bg-gray-50 ${fieldErrors.pan ? 'border-app-error' : 'border-app-border'}`}
+                      className={`w-full font-mono px-3.5 py-2.5 rounded-lg border text-[16px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface placeholder-app-text-muted outline-none uppercase tracking-widest transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60 disabled:bg-gray-50 dark:bg-gray-900 ${fieldErrors.pan ? 'border-app-error' : 'border-app-border dark:border-app-dark-border'}`}
                     />
                     {fieldErrors.pan && <p className="mt-1 text-[12px] text-app-error">{fieldErrors.pan}</p>}
-                    <p className="mt-1 text-[12px] text-app-text-muted">Format: 5 letters, 4 digits, 1 letter (e.g. ABCDE1234F)</p>
+                    <p className="mt-1 text-[12px] text-app-text-muted dark:text-gray-400">Format: 5 letters, 4 digits, 1 letter (e.g. ABCDE1234F)</p>
                   </div>
 
                   {/* Full Name */}
                   <div>
-                    <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="panName">
+                    <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-1.5" htmlFor="panName">
                       Full Name (as on PAN) <span className="text-app-error">*</span>
                     </label>
                     <input
@@ -262,14 +262,14 @@ export default function PANVerificationPage() {
                       }}
                       placeholder="Your full legal name"
                       disabled={state === 'loading'}
-                      className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white text-app-text-primary placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60 disabled:bg-gray-50 ${fieldErrors.name ? 'border-app-error' : 'border-app-border'}`}
+                      className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60 disabled:bg-gray-50 dark:bg-gray-900 ${fieldErrors.name ? 'border-app-error' : 'border-app-border dark:border-app-dark-border'}`}
                     />
                     {fieldErrors.name && <p className="mt-1 text-[12px] text-app-error">{fieldErrors.name}</p>}
                   </div>
 
                   {/* Date of Birth */}
                   <div>
-                    <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="panDob">
+                    <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-1.5" htmlFor="panDob">
                       Date of Birth <span className="text-app-error">*</span>
                     </label>
                     <input
@@ -283,18 +283,18 @@ export default function PANVerificationPage() {
                       }}
                       max={new Date().toISOString().slice(0, 10)}
                       disabled={state === 'loading'}
-                      className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white text-app-text-primary outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60 disabled:bg-gray-50 ${fieldErrors.dob ? 'border-app-error' : 'border-app-border'}`}
+                      className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60 disabled:bg-gray-50 dark:bg-gray-900 ${fieldErrors.dob ? 'border-app-error' : 'border-app-border dark:border-app-dark-border'}`}
                     />
                     {fieldErrors.dob && <p className="mt-1 text-[12px] text-app-error">{fieldErrors.dob}</p>}
                   </div>
 
                   {/* Mobile (optional) */}
                   <div>
-                    <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="panMobile">
-                      Mobile Number <span className="text-[12px] text-app-text-muted font-normal">(optional)</span>
+                    <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-1.5" htmlFor="panMobile">
+                      Mobile Number <span className="text-[12px] text-app-text-muted dark:text-gray-400 font-normal">(optional)</span>
                     </label>
                     <div className="flex">
-                      <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-app-border bg-app-bg text-[13px] text-app-text-muted">+91</span>
+                      <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-app-border dark:border-app-dark-border bg-app-bg dark:bg-app-dark text-[13px] text-app-text-muted dark:text-gray-400">+91</span>
                       <input
                         id="panMobile"
                         type="tel"
@@ -306,14 +306,14 @@ export default function PANVerificationPage() {
                         placeholder="10-digit mobile"
                         maxLength={10}
                         disabled={state === 'loading'}
-                        className="flex-1 px-3.5 py-2.5 rounded-r-lg border border-app-border text-[14px] bg-white text-app-text-primary placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60 disabled:bg-gray-50"
+                        className="flex-1 px-3.5 py-2.5 rounded-r-lg border border-app-border dark:border-app-dark-border text-[14px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 disabled:opacity-60 disabled:bg-gray-50 dark:bg-gray-900"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Security note */}
-                <div className="flex items-start gap-2.5 px-4 py-3 rounded-lg bg-app-bg border border-app-border-light text-[12px] text-app-text-muted">
+                <div className="flex items-start gap-2.5 px-4 py-3 rounded-lg bg-app-bg dark:bg-app-dark border border-app-border dark:border-app-dark-border-light text-[12px] text-app-text-muted dark:text-gray-400">
                   <span className="material-symbols-outlined text-[16px] mt-0.5">lock</span>
                   <span>Your PAN details are transmitted securely. Sensitive identifiers are masked in our records. We never store unnecessary PAN data.</span>
                 </div>
@@ -323,7 +323,7 @@ export default function PANVerificationPage() {
                   <button
                     onClick={() => navigate('/individual/profile')}
                     disabled={state === 'loading'}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[14px] font-medium transition-all disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-app-bg dark:bg-app-dark text-[14px] font-medium transition-all disabled:opacity-50"
                     type="button"
                   >
                     <span className="material-symbols-outlined text-[16px]">arrow_back</span>

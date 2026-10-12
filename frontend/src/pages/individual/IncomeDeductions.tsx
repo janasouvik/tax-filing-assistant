@@ -123,6 +123,10 @@ export default function IncomeDeductionsPage() {
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error?.message || 'Failed to add income entry');
+        return;
+      }
       if (data.data) {
         setIncomeEntries(prev => [...prev, data.data]);
         setNewIncome({ incomeType: 'SALARY', source: '', amount: '', tdsDeducted: '' });
@@ -138,6 +142,7 @@ export default function IncomeDeductionsPage() {
   const addDeduction = async () => {
     if (!newDeduction.description || !newDeduction.claimedAmount) return;
     setSaving(true);
+    setError('');
     try {
       const token = await getToken();
       const res = await fetch(`${BASE_URL}/api/v1/tax-returns/${returnId}/deductions`, {
@@ -150,6 +155,10 @@ export default function IncomeDeductionsPage() {
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error?.message || 'Failed to add deduction');
+        return;
+      }
       if (data.data) {
         setDeductions(prev => [...prev, data.data]);
         setNewDeduction({ section: 'SEC_80C', description: '', claimedAmount: '' });
@@ -170,30 +179,30 @@ export default function IncomeDeductionsPage() {
 
   return (
     <IndividualLayout currentStep={6}>
-      <div className="bg-app-surface border border-app-border rounded-xl overflow-hidden shadow-xs">
+      <div className="bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl overflow-hidden shadow-xs">
         {/* Header */}
         <div className="p-8 pb-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="material-symbols-outlined text-[20px] text-app-accent">receipt_long</span>
-            <p className="text-[12px] font-semibold text-app-text-muted uppercase tracking-wider">Steps 6–7 of 12</p>
+            <p className="text-[12px] font-semibold text-app-text-muted dark:text-gray-400 uppercase tracking-wider">Steps 6–7 of 12</p>
           </div>
-          <h1 className="font-serif text-[32px] text-app-text-primary font-normal mb-1">Income & Deductions</h1>
-          <p className="text-[15px] text-app-text-secondary mb-6">Add your income sources and eligible deductions for FY 2025-26.</p>
+          <h1 className="font-serif text-[32px] text-app-text-primary dark:text-app-surface font-normal mb-1">Income & Deductions</h1>
+          <p className="text-[15px] text-app-text-secondary dark:text-gray-300 mb-6">Add your income sources and eligible deductions for FY 2025-26.</p>
 
           {/* Tabs */}
-          <div className="flex gap-0 border-b border-app-border-light">
+          <div className="flex gap-0 border-b border-app-border dark:border-app-dark-border-light">
             {(['income', 'deductions'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-6 py-3 text-[14px] font-medium border-b-2 transition-all capitalize ${activeTab === tab
                     ? 'border-primary text-primary'
-                    : 'border-transparent text-app-text-muted hover:text-app-text-primary'
+                    : 'border-transparent text-app-text-muted dark:text-gray-400 hover:text-app-text-primary dark:hover:text-app-surface'
                   }`}
                 type="button"
               >
                 {tab}
-                <span className={`ml-2 px-1.5 py-0.5 text-[11px] rounded-full ${activeTab === tab ? 'bg-primary/10 text-primary' : 'bg-app-bg text-app-text-muted'}`}>
+                <span className={`ml-2 px-1.5 py-0.5 text-[11px] rounded-full ${activeTab === tab ? 'bg-primary/10 text-primary' : 'bg-app-bg dark:bg-app-dark text-app-text-muted dark:text-gray-400'}`}>
                   {tab === 'income' ? incomeEntries.length : deductions.length}
                 </span>
               </button>
@@ -210,42 +219,42 @@ export default function IncomeDeductionsPage() {
             <div className="space-y-4">
               {/* Summary */}
               <div className="grid grid-cols-3 gap-4">
-                <div className="bg-app-bg rounded-lg p-4 border border-app-border-light">
-                  <p className="text-[12px] text-app-text-muted">Total Income</p>
-                  <p className="font-serif text-[24px] text-app-text-primary mt-1 tabular-nums">{formatCurrency(totalIncome)}</p>
+                <div className="bg-app-bg dark:bg-app-dark rounded-lg p-4 border border-app-border dark:border-app-dark-border-light">
+                  <p className="text-[12px] text-app-text-muted dark:text-gray-400">Total Income</p>
+                  <p className="font-serif text-[24px] text-app-text-primary dark:text-app-surface mt-1 tabular-nums">{formatCurrency(totalIncome)}</p>
                 </div>
-                <div className="bg-app-bg rounded-lg p-4 border border-app-border-light">
-                  <p className="text-[12px] text-app-text-muted">Total TDS</p>
-                  <p className="font-serif text-[24px] text-app-text-primary mt-1 tabular-nums">{formatCurrency(totalTds)}</p>
+                <div className="bg-app-bg dark:bg-app-dark rounded-lg p-4 border border-app-border dark:border-app-dark-border-light">
+                  <p className="text-[12px] text-app-text-muted dark:text-gray-400">Total TDS</p>
+                  <p className="font-serif text-[24px] text-app-text-primary dark:text-app-surface mt-1 tabular-nums">{formatCurrency(totalTds)}</p>
                 </div>
-                <div className="bg-app-bg rounded-lg p-4 border border-app-border-light">
-                  <p className="text-[12px] text-app-text-muted">Entries</p>
-                  <p className="font-serif text-[24px] text-app-text-primary mt-1 tabular-nums">{incomeEntries.length}</p>
+                <div className="bg-app-bg dark:bg-app-dark rounded-lg p-4 border border-app-border dark:border-app-dark-border-light">
+                  <p className="text-[12px] text-app-text-muted dark:text-gray-400">Entries</p>
+                  <p className="font-serif text-[24px] text-app-text-primary dark:text-app-surface mt-1 tabular-nums">{incomeEntries.length}</p>
                 </div>
               </div>
 
               {/* Income list */}
               {incomeEntries.map((entry) => (
-                <div key={entry.id} className="flex items-start justify-between gap-4 p-4 rounded-lg border border-app-border hover:border-primary/30 transition-all">
+                <div key={entry.id} className="flex items-start justify-between gap-4 p-4 rounded-lg border border-app-border dark:border-app-dark-border hover:border-primary/30 transition-all">
                   <div className="flex items-start gap-3">
                     <span className="material-symbols-outlined text-[20px] text-app-accent mt-0.5">payments</span>
                     <div>
-                      <p className="text-[14px] font-semibold text-app-text-primary">{entry.source}</p>
-                      <p className="text-[12px] text-app-text-muted mt-0.5">{INCOME_TYPE_LABELS[entry.incomeType] || entry.incomeType}</p>
+                      <p className="text-[14px] font-semibold text-app-text-primary dark:text-app-surface">{entry.source}</p>
+                      <p className="text-[12px] text-app-text-muted dark:text-gray-400 mt-0.5">{INCOME_TYPE_LABELS[entry.incomeType] || entry.incomeType}</p>
                       {entry.tdsDeducted && entry.tdsDeducted > 0 && (
-                        <p className="text-[12px] text-app-text-muted mt-0.5">TDS: {formatCurrency(entry.tdsDeducted)}</p>
+                        <p className="text-[12px] text-app-text-muted dark:text-gray-400 mt-0.5">TDS: {formatCurrency(entry.tdsDeducted)}</p>
                       )}
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-[16px] font-semibold text-app-text-primary tabular-nums">{formatCurrency(entry.amount)}</p>
+                    <p className="text-[16px] font-semibold text-app-text-primary dark:text-app-surface tabular-nums">{formatCurrency(entry.amount)}</p>
                     <StatusBadge variant="verified" label="Verified" size="sm" />
                   </div>
                 </div>
               ))}
 
               {incomeEntries.length === 0 && !showAddIncome && (
-                <div className="text-center py-10 border-2 border-dashed border-app-border rounded-xl text-app-text-muted">
+                <div className="text-center py-10 border-2 border-dashed border-app-border dark:border-app-dark-border rounded-xl text-app-text-muted dark:text-gray-400">
                   <span className="material-symbols-outlined text-[40px] block mb-2">payments</span>
                   <p className="text-[14px]">No income sources added yet</p>
                 </div>
@@ -253,47 +262,47 @@ export default function IncomeDeductionsPage() {
 
               {/* Add income form */}
               {showAddIncome && (
-                <div className="p-5 rounded-xl border-2 border-primary/30 bg-[#FDF9F7] space-y-4">
-                  <h3 className="text-[15px] font-semibold text-app-text-primary">Add Income Source</h3>
+                <div className="p-5 rounded-xl border-2 border-primary/30 bg-[#FDF9F7] dark:bg-app-dark space-y-4">
+                  <h3 className="text-[15px] font-semibold text-app-text-primary dark:text-app-surface">Add Income Source</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[12px] font-medium text-app-text-primary mb-1">Income Type</label>
+                      <label className="block text-[12px] font-medium text-app-text-primary dark:text-app-surface mb-1">Income Type</label>
                       <select
                         value={newIncome.incomeType}
                         onChange={e => setNewIncome(p => ({ ...p, incomeType: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-lg border border-app-border text-[14px] bg-white outline-none focus:border-primary"
+                        className="w-full px-3 py-2 rounded-lg border border-app-border dark:border-app-dark-border text-[14px] bg-white dark:bg-app-dark-card outline-none focus:border-primary"
                       >
                         {Object.entries(INCOME_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[12px] font-medium text-app-text-primary mb-1">Source (e.g. employer name)</label>
+                      <label className="block text-[12px] font-medium text-app-text-primary dark:text-app-surface mb-1">Source (e.g. employer name)</label>
                       <input
                         type="text"
                         value={newIncome.source}
                         onChange={e => setNewIncome(p => ({ ...p, source: e.target.value }))}
                         placeholder="ABC Technologies Ltd"
-                        className="w-full px-3 py-2 rounded-lg border border-app-border text-[14px] bg-white outline-none focus:border-primary"
+                        className="w-full px-3 py-2 rounded-lg border border-app-border dark:border-app-dark-border text-[14px] bg-white dark:bg-app-dark-card outline-none focus:border-primary"
                       />
                     </div>
                     <div>
-                      <label className="block text-[12px] font-medium text-app-text-primary mb-1">Amount (₹)</label>
+                      <label className="block text-[12px] font-medium text-app-text-primary dark:text-app-surface mb-1">Amount (₹)</label>
                       <input
                         type="number"
                         value={newIncome.amount}
                         onChange={e => setNewIncome(p => ({ ...p, amount: e.target.value }))}
                         placeholder="0"
-                        className="w-full px-3 py-2 rounded-lg border border-app-border text-[14px] bg-white outline-none focus:border-primary"
+                        className="w-full px-3 py-2 rounded-lg border border-app-border dark:border-app-dark-border text-[14px] bg-white dark:bg-app-dark-card outline-none focus:border-primary"
                       />
                     </div>
                     <div>
-                      <label className="block text-[12px] font-medium text-app-text-primary mb-1">TDS Deducted (₹)</label>
+                      <label className="block text-[12px] font-medium text-app-text-primary dark:text-app-surface mb-1">TDS Deducted (₹)</label>
                       <input
                         type="number"
                         value={newIncome.tdsDeducted}
                         onChange={e => setNewIncome(p => ({ ...p, tdsDeducted: e.target.value }))}
                         placeholder="0"
-                        className="w-full px-3 py-2 rounded-lg border border-app-border text-[14px] bg-white outline-none focus:border-primary"
+                        className="w-full px-3 py-2 rounded-lg border border-app-border dark:border-app-dark-border text-[14px] bg-white dark:bg-app-dark-card outline-none focus:border-primary"
                       />
                     </div>
                   </div>
@@ -301,14 +310,14 @@ export default function IncomeDeductionsPage() {
                     <button onClick={addIncome} disabled={saving} className="px-4 py-2 rounded-lg bg-primary text-white text-[13px] font-medium disabled:opacity-60">
                       {saving ? 'Saving...' : 'Add Income'}
                     </button>
-                    <button onClick={() => setShowAddIncome(false)} className="px-4 py-2 rounded-lg border border-app-border text-app-text-secondary text-[13px]">Cancel</button>
+                    <button onClick={() => setShowAddIncome(false)} className="px-4 py-2 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 text-[13px]">Cancel</button>
                   </div>
                 </div>
               )}
 
               <button
                 onClick={() => setShowAddIncome(true)}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-dashed border-app-border text-app-text-muted hover:border-primary hover:text-primary transition-all text-[14px]"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-dashed border-app-border dark:border-app-dark-border text-app-text-muted dark:text-gray-400 hover:border-primary hover:text-primary transition-all text-[14px]"
                 type="button"
               >
                 <span className="material-symbols-outlined text-[18px]">add</span>
@@ -321,21 +330,21 @@ export default function IncomeDeductionsPage() {
           {activeTab === 'deductions' && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-app-bg rounded-lg p-4 border border-app-border-light">
-                  <p className="text-[12px] text-app-text-muted">Total Deductions</p>
+                <div className="bg-app-bg dark:bg-app-dark rounded-lg p-4 border border-app-border dark:border-app-dark-border-light">
+                  <p className="text-[12px] text-app-text-muted dark:text-gray-400">Total Deductions</p>
                   <p className="font-serif text-[24px] text-app-success mt-1 tabular-nums">{formatCurrency(totalDeductions)}</p>
                 </div>
-                <div className="bg-app-bg rounded-lg p-4 border border-app-border-light">
-                  <p className="text-[12px] text-app-text-muted">Claimed</p>
-                  <p className="font-serif text-[24px] text-app-text-primary mt-1 tabular-nums">{deductions.length} items</p>
+                <div className="bg-app-bg dark:bg-app-dark rounded-lg p-4 border border-app-border dark:border-app-dark-border-light">
+                  <p className="text-[12px] text-app-text-muted dark:text-gray-400">Claimed</p>
+                  <p className="font-serif text-[24px] text-app-text-primary dark:text-app-surface mt-1 tabular-nums">{deductions.length} items</p>
                 </div>
               </div>
 
               {deductions.map((ded) => (
-                <div key={ded.id} className="flex items-start justify-between gap-4 p-4 rounded-lg border border-app-border">
+                <div key={ded.id} className="flex items-start justify-between gap-4 p-4 rounded-lg border border-app-border dark:border-app-dark-border">
                   <div>
-                    <p className="text-[14px] font-semibold text-app-text-primary">{ded.description}</p>
-                    <p className="text-[12px] text-app-text-muted mt-0.5">{DEDUCTION_LABELS[ded.section] || ded.section}</p>
+                    <p className="text-[14px] font-semibold text-app-text-primary dark:text-app-surface">{ded.description}</p>
+                    <p className="text-[12px] text-app-text-muted dark:text-gray-400 mt-0.5">{DEDUCTION_LABELS[ded.section] || ded.section}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[16px] font-semibold text-app-success tabular-nums">-{formatCurrency(ded.claimedAmount)}</p>
@@ -345,44 +354,44 @@ export default function IncomeDeductionsPage() {
               ))}
 
               {deductions.length === 0 && !showAddDeduction && (
-                <div className="text-center py-10 border-2 border-dashed border-app-border rounded-xl text-app-text-muted">
+                <div className="text-center py-10 border-2 border-dashed border-app-border dark:border-app-dark-border rounded-xl text-app-text-muted dark:text-gray-400">
                   <span className="material-symbols-outlined text-[40px] block mb-2">savings</span>
                   <p className="text-[14px]">No deductions added yet</p>
                 </div>
               )}
 
               {showAddDeduction && (
-                <div className="p-5 rounded-xl border-2 border-primary/30 bg-[#FDF9F7] space-y-4">
-                  <h3 className="text-[15px] font-semibold text-app-text-primary">Add Deduction</h3>
+                <div className="p-5 rounded-xl border-2 border-primary/30 bg-[#FDF9F7] dark:bg-app-dark space-y-4">
+                  <h3 className="text-[15px] font-semibold text-app-text-primary dark:text-app-surface">Add Deduction</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[12px] font-medium text-app-text-primary mb-1">Section</label>
+                      <label className="block text-[12px] font-medium text-app-text-primary dark:text-app-surface mb-1">Section</label>
                       <select
                         value={newDeduction.section}
                         onChange={e => setNewDeduction(p => ({ ...p, section: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-lg border border-app-border text-[14px] bg-white outline-none focus:border-primary"
+                        className="w-full px-3 py-2 rounded-lg border border-app-border dark:border-app-dark-border text-[14px] bg-white dark:bg-app-dark-card outline-none focus:border-primary"
                       >
                         {Object.entries(DEDUCTION_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[12px] font-medium text-app-text-primary mb-1">Description</label>
+                      <label className="block text-[12px] font-medium text-app-text-primary dark:text-app-surface mb-1">Description</label>
                       <input
                         type="text"
                         value={newDeduction.description}
                         onChange={e => setNewDeduction(p => ({ ...p, description: e.target.value }))}
                         placeholder="LIC Premium, PPF, etc."
-                        className="w-full px-3 py-2 rounded-lg border border-app-border text-[14px] bg-white outline-none focus:border-primary"
+                        className="w-full px-3 py-2 rounded-lg border border-app-border dark:border-app-dark-border text-[14px] bg-white dark:bg-app-dark-card outline-none focus:border-primary"
                       />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="block text-[12px] font-medium text-app-text-primary mb-1">Claimed Amount (₹)</label>
+                      <label className="block text-[12px] font-medium text-app-text-primary dark:text-app-surface mb-1">Claimed Amount (₹)</label>
                       <input
                         type="number"
                         value={newDeduction.claimedAmount}
                         onChange={e => setNewDeduction(p => ({ ...p, claimedAmount: e.target.value }))}
                         placeholder="0"
-                        className="w-full px-3 py-2 rounded-lg border border-app-border text-[14px] bg-white outline-none focus:border-primary"
+                        className="w-full px-3 py-2 rounded-lg border border-app-border dark:border-app-dark-border text-[14px] bg-white dark:bg-app-dark-card outline-none focus:border-primary"
                       />
                     </div>
                   </div>
@@ -390,14 +399,14 @@ export default function IncomeDeductionsPage() {
                     <button onClick={addDeduction} disabled={saving} className="px-4 py-2 rounded-lg bg-primary text-white text-[13px] font-medium disabled:opacity-60">
                       {saving ? 'Saving...' : 'Add Deduction'}
                     </button>
-                    <button onClick={() => setShowAddDeduction(false)} className="px-4 py-2 rounded-lg border border-app-border text-app-text-secondary text-[13px]">Cancel</button>
+                    <button onClick={() => setShowAddDeduction(false)} className="px-4 py-2 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 text-[13px]">Cancel</button>
                   </div>
                 </div>
               )}
 
               <button
                 onClick={() => setShowAddDeduction(true)}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-dashed border-app-border text-app-text-muted hover:border-primary hover:text-primary transition-all text-[14px]"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-dashed border-app-border dark:border-app-dark-border text-app-text-muted dark:text-gray-400 hover:border-primary hover:text-primary transition-all text-[14px]"
                 type="button"
               >
                 <span className="material-symbols-outlined text-[18px]">add</span>
@@ -407,10 +416,10 @@ export default function IncomeDeductionsPage() {
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between pt-6 mt-6 border-t border-app-border-light">
+          <div className="flex items-center justify-between pt-6 mt-6 border-t border-app-border dark:border-app-dark-border-light">
             <button
               onClick={() => navigate('/individual/documents')}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[14px] font-medium transition-all"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-app-bg dark:bg-app-dark text-[14px] font-medium transition-all"
               type="button"
             >
               <span className="material-symbols-outlined text-[16px]">arrow_back</span>

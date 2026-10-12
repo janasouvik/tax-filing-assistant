@@ -190,17 +190,17 @@ export default function SMETaxDashboard() {
 <div className="w-full h-56 pt-2">
 <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 700 220">
 
-<line stroke="#E8E0D9" stroke-dasharray="3 3" x1="50" x2="690" y1="20" y2="20"></line>
-<line stroke="#E8E0D9" stroke-dasharray="3 3" x1="50" x2="690" y1="65" y2="65"></line>
-<line stroke="#E8E0D9" stroke-dasharray="3 3" x1="50" x2="690" y1="110" y2="110"></line>
-<line stroke="#E8E0D9" stroke-dasharray="3 3" x1="50" x2="690" y1="155" y2="155"></line>
+<line stroke="#E8E0D9" strokeDasharray="3 3" x1="50" x2="690" y1="20" y2="20"></line>
+<line stroke="#E8E0D9" strokeDasharray="3 3" x1="50" x2="690" y1="65" y2="65"></line>
+<line stroke="#E8E0D9" strokeDasharray="3 3" x1="50" x2="690" y1="110" y2="110"></line>
+<line stroke="#E8E0D9" strokeDasharray="3 3" x1="50" x2="690" y1="155" y2="155"></line>
 <line stroke="#D8D1C9" x1="50" x2="690" y1="195" y2="195"></line>
 
-<text fill="#84746c" font-family="Geist" font-size="11" text-anchor="end" x="40" y="24">₹50L</text>
-<text fill="#84746c" font-family="Geist" font-size="11" text-anchor="end" x="40" y="69">₹37.5L</text>
-<text fill="#84746c" font-family="Geist" font-size="11" text-anchor="end" x="40" y="114">₹25L</text>
-<text fill="#84746c" font-family="Geist" font-size="11" text-anchor="end" x="40" y="159">₹12.5L</text>
-<text fill="#84746c" font-family="Geist" font-size="11" text-anchor="end" x="40" y="198">₹0</text>
+<text fill="#84746c" fontFamily="Geist" fontSize="11" textAnchor="end" x="40" y="24">₹50L</text>
+<text fill="#84746c" fontFamily="Geist" fontSize="11" textAnchor="end" x="40" y="69">₹37.5L</text>
+<text fill="#84746c" fontFamily="Geist" fontSize="11" textAnchor="end" x="40" y="114">₹25L</text>
+<text fill="#84746c" fontFamily="Geist" fontSize="11" textAnchor="end" x="40" y="159">₹12.5L</text>
+<text fill="#84746c" fontFamily="Geist" fontSize="11" textAnchor="end" x="40" y="198">₹0</text>
 
 <g transform="translate(110, 0)">
 
@@ -209,7 +209,7 @@ export default function SMETaxDashboard() {
 <rect fill="#D4BBA5" height="26" rx="2" width="22" x="25" y="169"></rect>
 
 <rect fill="#24170F" height="14" rx="2" width="22" x="50" y="181"></rect>
-<text fill="#51443d" font-family="Geist" font-size="12" text-anchor="middle" x="36" y="212">Q1 (Apr–Jun)</text>
+<text fill="#51443d" fontFamily="Geist" fontSize="12" textAnchor="middle" x="36" y="212">Q1 (Apr–Jun)</text>
 </g>
 
 <g transform="translate(260, 0)">
@@ -219,7 +219,7 @@ export default function SMETaxDashboard() {
 <rect fill="#D4BBA5" height="30" rx="2" width="22" x="25" y="165"></rect>
 
 <rect fill="#24170F" height="16" rx="2" width="22" x="50" y="179"></rect>
-<text fill="#51443d" font-family="Geist" font-size="12" text-anchor="middle" x="36" y="212">Q2 (Jul–Sep)</text>
+<text fill="#51443d" fontFamily="Geist" fontSize="12" textAnchor="middle" x="36" y="212">Q2 (Jul–Sep)</text>
 </g>
 
 <g transform="translate(410, 0)">
@@ -229,7 +229,7 @@ export default function SMETaxDashboard() {
 <rect fill="#D4BBA5" height="31" rx="2" width="22" x="25" y="164"></rect>
 
 <rect fill="#24170F" height="18" rx="2" width="22" x="50" y="177"></rect>
-<text fill="#51443d" font-family="Geist" font-size="12" text-anchor="middle" x="36" y="212">Q3 (Oct–Dec)</text>
+<text fill="#51443d" fontFamily="Geist" fontSize="12" textAnchor="middle" x="36" y="212">Q3 (Oct–Dec)</text>
 </g>
 
 <g transform="translate(560, 0)">
@@ -239,7 +239,7 @@ export default function SMETaxDashboard() {
 <rect fill="#D4BBA5" height="35" rx="2" width="22" x="25" y="160"></rect>
 
 <rect fill="#24170F" height="21" rx="2" width="22" x="50" y="174"></rect>
-<text fill="#51443d" font-family="Geist" font-size="12" text-anchor="middle" x="36" y="212">Q4 (Jan–Mar)</text>
+<text fill="#51443d" fontFamily="Geist" fontSize="12" textAnchor="middle" x="36" y="212">Q4 (Jan–Mar)</text>
 </g>
 </svg>
 </div>
@@ -511,7 +511,7 @@ export default function SMETaxDashboard() {
 <h2 className="font-headline-sm text-headline-sm text-on-surface">Recent Business Documents</h2>
 <p className="font-body-sm text-body-sm text-on-surface-variant">Extracted financial records, OCR logs, and ledger reconciliations.</p>
 </div>
-<button className="inline-flex items-center gap-1.5 text-xs font-medium border border-[#D8D1C9] bg-white hover:bg-surface-container-high px-3 py-1.5 rounded transition-colors" type="button">
+<button className="inline-flex items-center gap-1.5 text-xs font-medium border border-[#D8D1C9] bg-white dark:bg-app-dark-card hover:bg-surface-container-high px-3 py-1.5 rounded transition-colors" type="button">
 <span className="material-symbols-outlined text-[15px]">upload_file</span>
 <span>Upload New Folio</span>
 </button>

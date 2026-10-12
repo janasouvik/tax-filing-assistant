@@ -18,13 +18,13 @@ const STATES = [
 export function IndividualLayout({ children, currentStep }: { children: React.ReactNode; currentStep: number }) {
   const navigate = useNavigate();
   return (
-    <div className="bg-app-bg text-app-text-primary min-h-screen">
+    <div className="bg-app-bg dark:bg-app-dark text-app-text-primary dark:text-app-surface min-h-screen">
       <Navbar />
       <div className="pt-16 min-h-screen flex flex-col">
         <main className="flex-1 w-full py-10 px-6 md:px-12">
           <div className="max-w-[900px] mx-auto space-y-8">
             {/* Stepper */}
-            <div className="bg-app-surface border border-app-border rounded-xl p-5 shadow-xs overflow-x-auto">
+            <div className="bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-5 shadow-xs overflow-x-auto">
               <FilingStepper
                 currentStep={currentStep}
                 completedSteps={Array.from({ length: currentStep - 1 }, (_, i) => i + 1)}
@@ -49,21 +49,27 @@ export default function PersonalProfile() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const hasFetched = React.useRef(false);
-
   useEffect(() => {
-    let mounted = true;
-    if (!isAuthLoaded || !isUserLoaded || !isSignedIn || hasFetched.current) return;
-    hasFetched.current = true;
-    
+    let active = true;
+
+    if (!isAuthLoaded || !isUserLoaded) {
+      return;
+    }
+
+    if (!isSignedIn) {
+      setLoading(false);
+      navigate('/sign-in');
+      return;
+    }
+
     (async () => {
       console.log('PROFILE_GET_START');
       try {
         const p = await individualApi.getProfile(getToken);
-        if (!mounted) return;
-        
+        if (!active) return;
+
         console.log('PROFILE_GET_SUCCESS', { method: 'GET', status: 200 });
-        
+
         // Pre-fill from Clerk if no profile data
         if (!p.fullName && user?.fullName) {
           setProfile({ ...p, fullName: user.fullName || undefined, email: user.primaryEmailAddress?.emailAddress });
@@ -71,17 +77,20 @@ export default function PersonalProfile() {
           setProfile(p);
         }
       } catch (err: any) {
-        if (!mounted) return;
+        if (!active) return;
         console.error('PROFILE_GET_ERROR', err);
-        if (err.code !== 'WORKSPACE_NOT_FOUND') setError(err.message || 'Failed to load profile');
+        setError(err.message || 'Failed to load profile');
       } finally {
-        if (mounted) setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     })();
-    
-    return () => { mounted = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthLoaded, isUserLoaded, isSignedIn, user?.id]);
+
+    return () => {
+      active = false;
+    };
+  }, [isAuthLoaded, isUserLoaded, isSignedIn, user?.id, navigate]);
 
   const validate = () => {
     const errs: Record<string, string> = {};
@@ -127,15 +136,15 @@ export default function PersonalProfile() {
 
   return (
     <IndividualLayout currentStep={1}>
-      <div className="bg-app-surface border border-app-border rounded-xl p-8 shadow-xs">
+      <div className="bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-8 shadow-xs">
         {/* Header */}
         <div className="mb-7">
           <div className="flex items-center gap-2 mb-1">
             <span className="material-symbols-outlined text-[20px] text-app-accent">person</span>
-            <p className="text-[12px] font-semibold text-app-text-muted uppercase tracking-wider">Step 1 of 12</p>
+            <p className="text-[12px] font-semibold text-app-text-muted dark:text-gray-400 uppercase tracking-wider">Step 1 of 12</p>
           </div>
-          <h1 className="font-serif text-[32px] text-app-text-primary font-normal">Personal Profile</h1>
-          <p className="text-[15px] text-app-text-secondary mt-1">
+          <h1 className="font-serif text-[32px] text-app-text-primary dark:text-app-surface font-normal">Personal Profile</h1>
+          <p className="text-[15px] text-app-text-secondary dark:text-gray-300 mt-1">
             Provide your personal information as it appears on official documents.
           </p>
         </div>
@@ -157,7 +166,7 @@ export default function PersonalProfile() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Full Name */}
           <div className="md:col-span-2">
-            <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="fullName">
+            <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-1.5" htmlFor="fullName">
               Full Name <span className="text-app-error">*</span>
             </label>
             <input
@@ -166,34 +175,34 @@ export default function PersonalProfile() {
               value={profile.fullName || ''}
               onChange={e => handleChange('fullName', e.target.value)}
               placeholder="As on PAN card"
-              className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white text-app-text-primary placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.fullName ? 'border-app-error' : 'border-app-border'}`}
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.fullName ? 'border-app-error' : 'border-app-border dark:border-app-dark-border'}`}
             />
             {errors.fullName && <p className="mt-1 text-[12px] text-app-error">{errors.fullName}</p>}
           </div>
 
           {/* Date of Birth */}
           <div>
-            <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="dateOfBirth">
+            <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-1.5" htmlFor="dateOfBirth">
               Date of Birth <span className="text-app-error">*</span>
             </label>
             <input
               id="dateOfBirth"
               type="date"
-              value={profile.dateOfBirth ? profile.dateOfBirth.slice(0, 10) : ''}
+              value={profile.dateOfBirth ? (typeof profile.dateOfBirth === 'string' ? profile.dateOfBirth.slice(0, 10) : new Date(profile.dateOfBirth).toISOString().slice(0, 10)) : ''}
               onChange={e => handleChange('dateOfBirth', e.target.value)}
               max={new Date().toISOString().slice(0, 10)}
-              className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white text-app-text-primary outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.dateOfBirth ? 'border-app-error' : 'border-app-border'}`}
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.dateOfBirth ? 'border-app-error' : 'border-app-border dark:border-app-dark-border'}`}
             />
             {errors.dateOfBirth && <p className="mt-1 text-[12px] text-app-error">{errors.dateOfBirth}</p>}
           </div>
 
           {/* Mobile Number */}
           <div>
-            <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="mobileNumber">
+            <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-1.5" htmlFor="mobileNumber">
               Mobile Number <span className="text-app-error">*</span>
             </label>
             <div className="flex">
-              <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-app-border bg-app-bg text-[13px] text-app-text-muted">+91</span>
+              <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-app-border dark:border-app-dark-border bg-app-bg dark:bg-app-dark text-[13px] text-app-text-muted dark:text-gray-400">+91</span>
               <input
                 id="mobileNumber"
                 type="tel"
@@ -201,7 +210,7 @@ export default function PersonalProfile() {
                 onChange={e => handleChange('mobileNumber', e.target.value)}
                 placeholder="10-digit mobile"
                 maxLength={10}
-                className={`flex-1 px-3.5 py-2.5 rounded-r-lg border text-[14px] bg-white text-app-text-primary placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.mobileNumber ? 'border-app-error' : 'border-app-border'}`}
+                className={`flex-1 px-3.5 py-2.5 rounded-r-lg border text-[14px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.mobileNumber ? 'border-app-error' : 'border-app-border dark:border-app-dark-border'}`}
               />
             </div>
             {errors.mobileNumber && <p className="mt-1 text-[12px] text-app-error">{errors.mobileNumber}</p>}
@@ -209,7 +218,7 @@ export default function PersonalProfile() {
 
           {/* Email */}
           <div>
-            <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="email">
+            <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-1.5" htmlFor="email">
               Email Address <span className="text-app-error">*</span>
             </label>
             <input
@@ -218,21 +227,21 @@ export default function PersonalProfile() {
               value={profile.email || ''}
               onChange={e => handleChange('email', e.target.value)}
               placeholder="your@email.com"
-              className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white text-app-text-primary placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.email ? 'border-app-error' : 'border-app-border'}`}
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.email ? 'border-app-error' : 'border-app-border dark:border-app-dark-border'}`}
             />
             {errors.email && <p className="mt-1 text-[12px] text-app-error">{errors.email}</p>}
           </div>
 
           {/* Residential Status */}
           <div>
-            <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="residentialStatus">
+            <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-1.5" htmlFor="residentialStatus">
               Residential Status
             </label>
             <select
               id="residentialStatus"
               value={profile.residentialStatus || 'RESIDENT'}
               onChange={e => handleChange('residentialStatus', e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-app-border text-[14px] bg-white text-app-text-primary outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+              className="w-full px-3.5 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-[14px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
             >
               <option value="RESIDENT">Resident Indian</option>
               <option value="NON_RESIDENT">Non-Resident Indian (NRI)</option>
@@ -242,14 +251,14 @@ export default function PersonalProfile() {
 
           {/* State */}
           <div>
-            <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="state">
+            <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-1.5" htmlFor="state">
               State <span className="text-app-error">*</span>
             </label>
             <select
               id="state"
               value={profile.state || ''}
               onChange={e => handleChange('state', e.target.value)}
-              className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white text-app-text-primary outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.state ? 'border-app-error' : 'border-app-border'}`}
+              className={`w-full px-3.5 py-2.5 rounded-lg border text-[14px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10 ${errors.state ? 'border-app-error' : 'border-app-border dark:border-app-dark-border'}`}
             >
               <option value="">Select state</option>
               {STATES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -259,7 +268,7 @@ export default function PersonalProfile() {
 
           {/* City */}
           <div>
-            <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="city">
+            <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-1.5" htmlFor="city">
               City
             </label>
             <input
@@ -268,13 +277,13 @@ export default function PersonalProfile() {
               value={profile.city || ''}
               onChange={e => handleChange('city', e.target.value)}
               placeholder="Your city"
-              className="w-full px-3.5 py-2.5 rounded-lg border border-app-border text-[14px] bg-white text-app-text-primary placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+              className="w-full px-3.5 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-[14px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
             />
           </div>
 
           {/* PIN Code */}
           <div>
-            <label className="block text-[13px] font-medium text-app-text-primary mb-1.5" htmlFor="pinCode">
+            <label className="block text-[13px] font-medium text-app-text-primary dark:text-app-surface mb-1.5" htmlFor="pinCode">
               PIN Code
             </label>
             <input
@@ -284,16 +293,16 @@ export default function PersonalProfile() {
               onChange={e => handleChange('pinCode', e.target.value)}
               placeholder="6-digit PIN"
               maxLength={6}
-              className="w-full px-3.5 py-2.5 rounded-lg border border-app-border text-[14px] bg-white text-app-text-primary placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
+              className="w-full px-3.5 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-[14px] bg-white dark:bg-app-dark-card text-app-text-primary dark:text-app-surface placeholder-app-text-muted outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/10"
             />
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-app-border-light">
+        <div className="flex items-center justify-between mt-8 pt-6 border-t border-app-border dark:border-app-dark-border-light">
           <button
             onClick={() => navigate('/individualtaxdashboard')}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[14px] font-medium transition-all"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-app-bg dark:hover:bg-app-dark text-[14px] font-medium transition-all"
             type="button"
           >
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>

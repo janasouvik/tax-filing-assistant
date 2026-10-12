@@ -5,7 +5,8 @@ import prisma from '../config/prisma';
 import { verifyPanWithProvider } from '../modules/pan/pan.service';
 import { isValidPanFormat, maskPan, normalizePan } from '../modules/pan/pan.validator';
 import { checkAadhaarPanStatus } from '../services/aadhaar-pan.service';
-import { compareRegimes, calculateTax } from '../services/tax-calculator.service';
+import { getClientIp, generateApprovalHash, CanonicalFinancialSnapshot } from '../utils/helpers';
+import { invalidateTaxCalculationsAndResetStatus } from '../services/taxReturn.service';
 import { z } from 'zod';
 
 // ========== Validators ==========
@@ -84,18 +85,41 @@ export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response
   const profile = await getOrCreateTaxpayerProfile(workspaceId);
 
   const data = parsed.data;
-  const updated = await prisma.taxpayerProfile.update({
-    where: { id: profile.id },
-    data: {
-      ...data,
-      dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
-      onboardingStep: Math.max(profile.onboardingStep, 2),
-    },
-    include: { panVerification: true, aadhaarPanStatus: true },
+  const isTaxImpactingChange = Boolean(
+    (data.dateOfBirth && (!profile.dateOfBirth || profile.dateOfBirth.toISOString().slice(0, 10) !== new Date(data.dateOfBirth).toISOString().slice(0, 10))) ||
+    (data.residentialStatus && profile.residentialStatus !== data.residentialStatus)
+  );
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const updatedProf = await tx.taxpayerProfile.update({
+      where: { id: profile.id },
+      data: {
+        ...data,
+        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
+        onboardingStep: Math.max(profile.onboardingStep, 2),
+      },
+      include: { panVerification: true, aadhaarPanStatus: true },
+    });
+
+    if (isTaxImpactingChange) {
+      const activeReturns = await tx.taxReturn.findMany({
+        where: {
+          workspaceId,
+          status: { notIn: ['PROCESSING', 'SUBMISSION_UNKNOWN', 'FILED'] },
+        },
+      });
+
+      for (const ret of activeReturns) {
+        await invalidateTaxCalculationsAndResetStatus(ret.id, tx);
+      }
+    }
+
+    return updatedProf;
   });
 
   res.json(successResponse(updated));
 });
+
 
 /**
  * POST /api/v1/individual/pan/verify
@@ -424,7 +448,7 @@ export const checkEligibility = asyncHandler(async (req: AuthRequest, res: Respo
   }
 
   res.json(successResponse({
-    assessmentYear: '2026-27',
+    assessmentYear: 'TY 2026-27',
     eligibleITR,
     eligible: true,
     reasons,
@@ -441,43 +465,70 @@ export const calculateTaxHandler = asyncHandler(async (req: AuthRequest, res: Re
   const workspaceId = await getWorkspaceForUser(req.user!.userId);
 
   // Fetch the most recent tax return
-  const taxReturn = await prisma.taxReturn.findFirst({
+  let taxReturn = await prisma.taxReturn.findFirst({
     where: { workspaceId },
     orderBy: { createdAt: 'desc' },
   });
 
   if (!taxReturn) {
-    res.json(successResponse({ note: 'No tax return found.' }));
-    return;
+    taxReturn = await prisma.taxReturn.create({
+      data: {
+        workspaceId,
+        financialYear: '2025-26',
+        assessmentYear: 'AY 2026-27',
+        returnType: 'ITR1',
+        regime: 'NEW',
+        metadata: {
+          framework: 'IT_ACT_1961',
+          yearType: 'ASSESSMENT_YEAR',
+          canonicalYear: 'AY 2026-27',
+          ruleVersion: 'AY2026-27-v1',
+        },
+      },
+    });
+  } else if (
+    (taxReturn.assessmentYear === '2026-27' || taxReturn.assessmentYear === '2026-2027') &&
+    !(taxReturn.metadata as any)?.framework
+  ) {
+    taxReturn = await prisma.taxReturn.update({
+      where: { id: taxReturn.id },
+      data: {
+        assessmentYear: 'AY 2026-27',
+        metadata: {
+          ...((taxReturn.metadata as any) || {}),
+          framework: 'IT_ACT_1961',
+          yearType: 'ASSESSMENT_YEAR',
+          canonicalYear: 'AY 2026-27',
+          ruleVersion: 'AY2026-27-v1',
+        },
+      },
+    });
   }
 
   // Call Orchestrator
   const { generateTaxPrediction } = await import('../modules/taxPrediction/prediction.service');
   const predictionResult = await generateTaxPrediction(taxReturn.id, req.user!.userId);
 
+  const [incomeCount, deductionCount] = await Promise.all([
+    prisma.incomeEntry.count({ where: { taxReturnId: taxReturn.id } }),
+    prisma.deduction.count({ where: { taxReturnId: taxReturn.id } }),
+  ]);
+
   res.json(successResponse({
     comparison: {
-      newRegime: {
-        totalTax: Number(predictionResult.regimes.new.totalTax),
-        taxableIncome: Number(predictionResult.regimes.new.taxableIncome),
-        refundPayable: Number(predictionResult.regimes.new.refundPayable),
-        slabBreakdown: predictionResult.regimes.new.slabBreakdown
-      },
-      oldRegime: {
-        totalTax: Number(predictionResult.regimes.old.totalTax),
-        taxableIncome: Number(predictionResult.regimes.old.taxableIncome),
-        refundPayable: Number(predictionResult.regimes.old.refundPayable),
-        slabBreakdown: predictionResult.regimes.old.slabBreakdown
-      },
+      assessmentYear: predictionResult.regimes.assessmentYear,
+      ruleVersion: predictionResult.regimes.ruleVersion,
+      newRegime: predictionResult.regimes.new,
+      oldRegime: predictionResult.regimes.old,
       savings: Number(predictionResult.regimes.saving),
       recommendedRegime: predictionResult.regimes.recommendation,
-      savingsExplanation: `Choosing the ${predictionResult.regimes.recommendation} regime saves you ₹${Number(predictionResult.regimes.saving).toLocaleString()}`
+      savingsExplanation: `Choosing the ${predictionResult.regimes.recommendation} regime saves you ₹${Number(predictionResult.regimes.saving).toLocaleString('en-IN')}`
     },
     inputSummary: { 
       grossIncome: Number(predictionResult.prediction.grossIncome), 
       tdsDeducted: Number(predictionResult.prediction.tdsDeducted), 
-      incomeCount: predictionResult.readiness.score, // Just mapping some data here as placeholder 
-      deductionCount: predictionResult.deductionEvaluation.length 
+      incomeCount, 
+      deductionCount,
     },
     prediction: predictionResult.prediction,
     optimizations: predictionResult.optimizations,
@@ -485,7 +536,7 @@ export const calculateTaxHandler = asyncHandler(async (req: AuthRequest, res: Re
     issues: predictionResult.issues,
     confidence: predictionResult.confidence,
     readiness: predictionResult.readiness,
-    note: 'Tax calculated by TaxPilot prediction engine for AY 2026-27. Final liability must be confirmed on the Income Tax portal.',
+    note: `Tax calculated by TaxPilot prediction engine for ${predictionResult.regimes.assessmentYear || 'Tax Year 2026-27'}. Final liability must be confirmed on the Income Tax portal.`,
     calculatedAt: new Date().toISOString(),
   }));
 });
@@ -545,7 +596,7 @@ export const validateReturn = asyncHandler(async (req: AuthRequest, res: Respons
 
 /**
  * POST /api/v1/individual/return/approve
- * User reviews and approves — sets READY_FOR_SUBMISSION (never auto-files)
+ * User reviews and approves — enforces validation & calculation checks before setting APPROVED
  */
 export const approveReturn = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   const workspaceId = await getWorkspaceForUser(req.user!.userId);
@@ -553,22 +604,138 @@ export const approveReturn = asyncHandler(async (req: AuthRequest, res: Response
   const taxReturn = await prisma.taxReturn.findFirst({
     where: { workspaceId },
     orderBy: { createdAt: 'desc' },
+    include: { incomeEntries: true, deductions: true },
   });
 
   if (!taxReturn) return next(new AppError('No tax return found to approve', 404, 'NOT_FOUND'));
-  if (taxReturn.status === 'FILED') {
-    return next(new AppError('This return has already been filed or verified.', 400, 'ALREADY_FILED'));
+
+  const lockedStates = ['PROCESSING', 'SUBMISSION_UNKNOWN', 'FILED'];
+  if (lockedStates.includes(taxReturn.status)) {
+    return next(new AppError(`Cannot approve return in locked status: ${taxReturn.status}`, 403, 'LOCKED_RETURN'));
   }
 
-  const updated = await prisma.taxReturn.update({
-    where: { id: taxReturn.id },
-    data: { status: 'USER_REVIEW' },
+  // 1. Validation checks
+  const profile = await prisma.taxpayerProfile.findUnique({
+    where: { workspaceId },
+    include: { panVerification: true },
+  });
+
+  if (!profile?.panVerification || !['VERIFIED', 'SANDBOX'].includes(profile.panVerification.status)) {
+    return next(new AppError('PAN verification is required before approval.', 422, 'PAN_NOT_VERIFIED'));
+  }
+
+  if (!profile?.fullName || !profile?.dateOfBirth) {
+    return next(new AppError('Full name and date of birth are required before approval.', 422, 'PROFILE_INCOMPLETE'));
+  }
+
+  if (taxReturn.incomeEntries.length === 0) {
+    return next(new AppError('At least one income source must be added before approval.', 422, 'NO_INCOME'));
+  }
+
+  // 2. Calculation freshness & atomic approval transaction
+  const ip = getClientIp(req);
+  const timestamp = new Date().toISOString();
+
+  const [approval, updated] = await prisma.$transaction(async (tx) => {
+    // Acquire row-level lock on TaxReturn to serialize concurrent operations
+    if (typeof tx?.$queryRaw === 'function') {
+      await tx.$queryRaw`SELECT id FROM "TaxReturn" WHERE id = ${taxReturn.id} FOR UPDATE`;
+    }
+
+    // Re-fetch tax return within transaction to prevent race conditions
+    const currentReturn = await tx.taxReturn.findUnique({
+      where: { id: taxReturn.id },
+      include: { incomeEntries: true, deductions: true },
+    });
+
+    if (!currentReturn) throw new AppError('Tax return not found', 404, 'NOT_FOUND');
+    if (lockedStates.includes(currentReturn.status)) {
+      throw new AppError(`Cannot approve return in locked status: ${currentReturn.status}`, 403, 'LOCKED_RETURN');
+    }
+    if (currentReturn.status === 'APPROVED') {
+      throw new AppError('Tax return has already been approved', 409, 'ALREADY_APPROVED');
+    }
+
+    const calculation = await tx.taxCalculation.findFirst({
+      where: { taxReturnId: currentReturn.id },
+      orderBy: { calculatedAt: 'desc' },
+    });
+
+    if (!calculation) {
+      throw new AppError('Tax calculation is required before approving return. Please calculate tax first.', 422, 'NO_CALCULATION');
+    }
+
+    if (calculation.regime !== currentReturn.regime) {
+      throw new AppError(`Tax calculation regime (${calculation.regime}) does not match current return regime (${currentReturn.regime}). Recalculate tax before approval.`, 422, 'STALE_CALCULATION');
+    }
+
+    const inputs = calculation.inputs as any;
+    if (
+      inputs?.incomeCount !== currentReturn.incomeEntries.length ||
+      inputs?.deductionCount !== currentReturn.deductions.length
+    ) {
+      throw new AppError('Tax calculation is stale relative to current income or deduction entries. Recalculate tax before approval.', 422, 'STALE_CALCULATION');
+    }
+
+    const snapshot: CanonicalFinancialSnapshot = {
+      taxReturnId: currentReturn.id,
+      userId: req.user!.userId,
+      assessmentYear: currentReturn.assessmentYear,
+      regime: currentReturn.regime,
+      ruleVersion: calculation.ruleVersion,
+      grossIncome: Number(calculation.grossIncome),
+      totalDeductions: Number(calculation.totalDeductions),
+      taxableIncome: Number(calculation.taxableIncome),
+      taxLiability: Number(calculation.taxLiability),
+      totalTax: Number(calculation.totalTax),
+      tdsDeducted: Number(calculation.tdsDeducted),
+      refundPayable: Number(calculation.refundPayable),
+      calculationId: calculation.id,
+      timestamp,
+    };
+
+    const approvalHash = generateApprovalHash(snapshot);
+    const notesPayload = JSON.stringify({
+      note: 'Individual approval via TaxPilot review',
+      snapshot,
+    });
+
+    // Supersede any existing ACTIVE approval for audit traceability
+    if (typeof tx?.approval?.updateMany === 'function') {
+      await tx.approval.updateMany({
+        where: { taxReturnId: currentReturn.id, status: 'ACTIVE' },
+        data: {
+          status: 'SUPERSEDED',
+          invalidatedAt: new Date(),
+          invalidationReason: 'Superseded by new approval',
+        },
+      });
+    }
+
+    const approvalRecord = await tx.approval.create({
+      data: {
+        taxReturnId: currentReturn.id,
+        approvedBy: req.user!.userId,
+        ipAddress: ip,
+        approvalHash,
+        notes: notesPayload,
+        status: 'ACTIVE',
+      },
+    });
+
+    const updatedRet = await tx.taxReturn.update({
+      where: { id: currentReturn.id },
+      data: { status: 'APPROVED' },
+    });
+
+    return [approvalRecord, updatedRet];
   });
 
   res.json(successResponse({
     message: 'Return approved and marked as ready for submission.',
     status: updated.status,
     returnId: updated.id,
+    approvalHash: approval.approvalHash,
     note: 'Your return is approved. Proceed to the Income Tax portal for official filing.',
   }));
 });

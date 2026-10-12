@@ -48,6 +48,9 @@ export const taxReturnSchema = z.object({
   financialYear: z.string().regex(/^\d{4}-\d{2}$/),
   returnType: z.enum(['ITR1', 'ITR2', 'ITR3', 'ITR4']).optional(),
   regime: z.enum(['OLD', 'NEW']).optional(),
+  assessmentYear: z.string().optional(),
+  taxYear: z.string().optional(),
+  framework: z.enum(['IT_ACT_1961', 'IT_ACT_2025']).optional(),
 });
 
 export const incomeSchema = z.object({
@@ -100,3 +103,12 @@ export const issueUpdateSchema = z.object({
   status: z.enum(['OPEN', 'RESOLVED', 'DISMISSED']).optional(),
   notes: z.string().optional(),
 });
+
+export const initiateVerificationSchema = z.object({
+  method: z.enum(['AADHAAR_OTP', 'EVC_NETBANKING', 'EVC_BANK_ACCOUNT', 'EVC_DEMAT', 'ITR_V']),
+});
+
+export const submitVerificationOtpSchema = z.object({
+  otp: z.string().regex(/^\d{6}$/, 'OTP must be 6 numeric digits'),
+});
+

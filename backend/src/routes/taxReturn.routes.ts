@@ -2,7 +2,14 @@ import { Router } from 'express';
 import * as ctrl from '../controllers/taxReturn.controller';
 import { authenticate, loadUser } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
-import { taxReturnSchema, incomeSchema, deductionSchema, issueUpdateSchema } from '../validators';
+import {
+  taxReturnSchema,
+  incomeSchema,
+  deductionSchema,
+  issueUpdateSchema,
+  initiateVerificationSchema,
+  submitVerificationOtpSchema
+} from '../validators';
 
 const router = Router();
 router.use(authenticate, loadUser);
@@ -41,9 +48,17 @@ router.post('/issues/:issueId/resolve', ctrl.resolveIssueController);
 router.get('/tax-returns/:returnId/tax-savings', ctrl.getTaxSavingsController);
 router.post('/tax-returns/:returnId/tax-savings/recalculate', ctrl.getTaxSavingsController);
 
-// Review / Approval
+// Review / Approval / Filing
 router.get('/tax-returns/:returnId/review', ctrl.getReviewController);
 router.post('/tax-returns/:returnId/review', ctrl.createReviewController);
 router.post('/tax-returns/:returnId/approve', ctrl.approveController);
+router.post('/tax-returns/:returnId/file', ctrl.fileReturnController);
+router.post('/tax-returns/:returnId/reconcile', ctrl.reconcileFilingController);
+
+// E-Verification
+router.get('/tax-returns/:returnId/verification', ctrl.getVerificationHistoryController);
+router.post('/tax-returns/:returnId/verify/initiate', validate(initiateVerificationSchema), ctrl.initiateVerificationController);
+router.post('/tax-returns/:returnId/verify/submit', validate(submitVerificationOtpSchema), ctrl.submitVerificationOtpController);
+router.post('/tax-returns/:returnId/verify/reconcile', ctrl.reconcileVerificationController);
 
 export default router;

@@ -75,13 +75,13 @@ export default function ValidationPage() {
   return (
     <IndividualLayout currentStep={9}>
       <div className="space-y-6">
-        <div className="bg-app-surface border border-app-border rounded-xl p-8 shadow-xs">
+        <div className="bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-8 shadow-xs">
           <div className="flex items-center gap-2 mb-1">
             <span className="material-symbols-outlined text-[20px] text-app-accent">checklist</span>
-            <p className="text-[12px] font-semibold text-app-text-muted uppercase tracking-wider">Step 9 of 12</p>
+            <p className="text-[12px] font-semibold text-app-text-muted dark:text-gray-400 uppercase tracking-wider">Step 9 of 12</p>
           </div>
-          <h1 className="font-serif text-[32px] text-app-text-primary font-normal">Validation</h1>
-          <p className="text-[15px] text-app-text-secondary mt-1">
+          <h1 className="font-serif text-[32px] text-app-text-primary dark:text-app-surface font-normal">Validation</h1>
+          <p className="text-[15px] text-app-text-secondary dark:text-gray-300 mt-1">
             We check your return for completeness and consistency before review.
           </p>
         </div>
@@ -99,10 +99,10 @@ export default function ValidationPage() {
                   </span>
                 </span>
                 <div>
-                  <h2 className="text-[20px] font-semibold text-app-text-primary">
+                  <h2 className="text-[20px] font-semibold text-app-text-primary dark:text-app-surface">
                     {result.isValid ? 'No critical errors found' : `${result.criticalErrors} critical error${result.criticalErrors > 1 ? 's' : ''} found`}
                   </h2>
-                  <p className="text-[14px] text-app-text-secondary mt-0.5">
+                  <p className="text-[14px] text-app-text-secondary dark:text-gray-300 mt-0.5">
                     {result.isValid
                       ? result.totalIssues === 0 ? 'Your return is ready for final review.' : `${warnings.length} warning${warnings.length !== 1 ? 's' : ''} to review.`
                       : 'Please resolve critical errors before proceeding.'}
@@ -125,8 +125,8 @@ export default function ValidationPage() {
 
             {/* Issues list */}
             {result.totalIssues > 0 && (
-              <div className="bg-app-surface border border-app-border rounded-xl p-6 shadow-xs space-y-4">
-                <h3 className="text-[15px] font-semibold text-app-text-primary">Issues</h3>
+              <div className="bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-6 shadow-xs space-y-4">
+                <h3 className="text-[15px] font-semibold text-app-text-primary dark:text-app-surface">Issues</h3>
                 <div className="space-y-2">
                   {[...errors, ...warnings, ...infos].map((issue, idx) => {
                     const cfg = severityIcon(issue.severity);
@@ -142,14 +142,14 @@ export default function ValidationPage() {
                             {cfg.icon}
                           </span>
                           <div>
-                            <p className="text-[14px] font-medium text-app-text-primary">{issue.message}</p>
-                            <p className="text-[12px] text-app-text-muted mt-0.5 capitalize">Field: {issue.field}</p>
+                            <p className="text-[14px] font-medium text-app-text-primary dark:text-app-surface">{issue.message}</p>
+                            <p className="text-[12px] text-app-text-muted dark:text-gray-400 mt-0.5 capitalize">Field: {issue.field}</p>
                           </div>
                         </div>
                         {link && (
                           <Link
                             to={link}
-                            className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-app-border text-[12px] text-app-text-secondary hover:bg-white transition-all"
+                            className="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-app-border dark:border-app-dark-border text-[12px] text-app-text-secondary dark:text-gray-300 hover:bg-white dark:bg-app-dark-card transition-all"
                           >
                             Fix
                             <span className="material-symbols-outlined text-[12px]">arrow_forward</span>
@@ -164,18 +164,18 @@ export default function ValidationPage() {
 
             {/* All clear */}
             {result.isValid && result.totalIssues === 0 && (
-              <div className="bg-app-surface border border-app-border rounded-xl p-8 shadow-xs text-center">
+              <div className="bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-8 shadow-xs text-center">
                 <span className="material-symbols-outlined text-[52px] text-app-success block mb-3" style={{ fontVariationSettings: "'FILL' 1" }}>
                   task_alt
                 </span>
-                <h3 className="text-[18px] font-semibold text-app-text-primary mb-1">Return is Clean</h3>
-                <p className="text-[14px] text-app-text-secondary">No issues found. You can proceed to final review.</p>
+                <h3 className="text-[18px] font-semibold text-app-text-primary dark:text-app-surface mb-1">Return is Clean</h3>
+                <p className="text-[14px] text-app-text-secondary dark:text-gray-300">No issues found. You can proceed to final review.</p>
               </div>
             )}
 
             {/* Readiness checklist */}
-            <div className="bg-app-surface border border-app-border rounded-xl p-6 shadow-xs">
-              <h3 className="text-[15px] font-semibold text-app-text-primary mb-4">Pre-Filing Checklist</h3>
+            <div className="bg-app-surface dark:bg-app-dark-card border border-app-border dark:border-app-dark-border rounded-xl p-6 shadow-xs">
+              <h3 className="text-[15px] font-semibold text-app-text-primary dark:text-app-surface mb-4">Pre-Filing Checklist</h3>
               <ul className="space-y-3">
                 {[
                   { label: 'PAN verified', done: errors.every(e => e.field !== 'pan'), link: '/individual/pan' },
@@ -190,7 +190,7 @@ export default function ValidationPage() {
                       <span className={`material-symbols-outlined text-[16px] ${item.done ? 'text-app-success' : 'text-app-error'}`} style={{ fontVariationSettings: "'FILL' 1" }}>
                         {item.done ? 'check_circle' : 'cancel'}
                       </span>
-                      <span className={item.done ? 'text-app-text-secondary' : 'text-app-error'}>{item.label}</span>
+                      <span className={item.done ? 'text-app-text-secondary dark:text-gray-300' : 'text-app-error'}>{item.label}</span>
                     </div>
                     {!item.done && item.link && (
                       <Link to={item.link} className="text-[12px] text-primary hover:underline">Fix →</Link>
@@ -204,7 +204,7 @@ export default function ValidationPage() {
             <div className="flex items-center justify-between pt-2">
               <button
                 onClick={() => navigate('/individual/tax')}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[14px] font-medium transition-all"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-app-bg dark:bg-app-dark text-[14px] font-medium transition-all"
                 type="button"
               >
                 <span className="material-symbols-outlined text-[16px]">arrow_back</span>
@@ -213,7 +213,7 @@ export default function ValidationPage() {
               <div className="flex gap-3">
                 <button
                   onClick={runValidation}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border text-app-text-secondary hover:bg-app-bg text-[14px] font-medium transition-all"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-app-bg dark:bg-app-dark text-[14px] font-medium transition-all"
                   type="button"
                 >
                   <span className="material-symbols-outlined text-[16px]">refresh</span>

@@ -16,7 +16,7 @@ export default function Onboarding() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ type, name: `${user?.firstName}'s Workspace` })
+        body: JSON.stringify({ type, name: user?.firstName ? `${user.firstName}'s Workspace` : 'My Workspace' })
       });
       if (response.ok) {
         if (type === "INDIVIDUAL") navigate("/individualtaxdashboard");
@@ -28,24 +28,24 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="bg-app-bg min-h-screen">
+    <div className="bg-app-bg dark:bg-app-dark min-h-screen">
       <Navbar />
       <div className="pt-24 px-6 max-w-4xl mx-auto">
-        <h1 className="text-3xl font-serif text-app-text-primary mb-8">Welcome, {user?.firstName}! Choose your profile</h1>
+        <h1 className="text-3xl font-serif text-app-text-primary dark:text-app-surface mb-8">Welcome, {user?.firstName || 'there'}! Choose your profile</h1>
         <div className="grid md:grid-cols-2 gap-6">
           <div 
             onClick={() => handleSelectWorkspace("INDIVIDUAL")}
-            className="p-6 border border-app-border rounded-xl bg-app-surface cursor-pointer hover:border-primary transition-all shadow-sm"
+            className="p-6 border border-app-border dark:border-app-dark-border rounded-xl bg-app-surface dark:bg-app-dark-card cursor-pointer hover:border-primary transition-all shadow-sm"
           >
-            <h2 className="text-xl font-medium text-app-text-primary mb-2">Individual Taxpayer</h2>
-            <p className="text-app-text-secondary text-sm">For salaried employees, freelancers, and individual investors.</p>
+            <h2 className="text-xl font-medium text-app-text-primary dark:text-app-surface mb-2">Individual Taxpayer</h2>
+            <p className="text-app-text-secondary dark:text-gray-300 text-sm">For salaried employees, freelancers, and individual investors.</p>
           </div>
           <div 
             onClick={() => handleSelectWorkspace("SME")}
-            className="p-6 border border-app-border rounded-xl bg-app-surface cursor-pointer hover:border-primary transition-all shadow-sm"
+            className="p-6 border border-app-border dark:border-app-dark-border rounded-xl bg-app-surface dark:bg-app-dark-card cursor-pointer hover:border-primary transition-all shadow-sm"
           >
-            <h2 className="text-xl font-medium text-app-text-primary mb-2">SME / Business</h2>
-            <p className="text-app-text-secondary text-sm">For small to medium enterprises, businesses, and corporate entities.</p>
+            <h2 className="text-xl font-medium text-app-text-primary dark:text-app-surface mb-2">SME / Business</h2>
+            <p className="text-app-text-secondary dark:text-gray-300 text-sm">For small to medium enterprises, businesses, and corporate entities.</p>
           </div>
         </div>
       </div>
