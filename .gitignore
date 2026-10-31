@@ -278,3 +278,9 @@ test-results/
 playwright-report/
 blob-report/
 
+# Private uploads & storage
+storage/
+private-uploads/
+backend/storage/
+backend/private-uploads/
+

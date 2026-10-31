@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as ctrl from '../controllers/workspace.controller';
+import * as docCtrl from '../controllers/document.controller';
 import { authenticate, loadUser } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { upload } from '../middlewares/upload';
@@ -16,9 +17,9 @@ router.patch(['/:workspaceId', '/workspaces/:workspaceId'], validate(workspacePa
 router.delete(['/:workspaceId', '/workspaces/:workspaceId'], ctrl.deleteWorkspace);
 
 // Workspace Document Management
-router.get('/workspaces/:workspaceId/documents', ctrl.getWorkspaceDocuments);
-router.post('/workspaces/:workspaceId/documents', upload.single('file'), ctrl.uploadWorkspaceDocument);
-router.get('/documents/:documentId', ctrl.getDocument);
-router.delete('/documents/:documentId', ctrl.deleteDocument);
+router.get('/workspaces/:workspaceId/documents', docCtrl.getWorkspaceDocuments);
+router.post('/workspaces/:workspaceId/documents', upload.single('file'), docCtrl.uploadDocument);
+router.get('/documents/:documentId', docCtrl.getDocument);
+router.delete('/documents/:documentId', docCtrl.deleteDocument);
 
 export default router;

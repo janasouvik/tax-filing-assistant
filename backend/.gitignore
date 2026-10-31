@@ -274,3 +274,5 @@ cython_debug/
 .env.local
 !*.example
 !.env.example
+private-uploads/
+storage/

@@ -13,6 +13,7 @@ import businessRoutes from './routes/business.routes';
 import copilotRoutes from './routes/copilot.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import individualRoutes from './routes/individual.routes';
+import documentRoutes from './routes/document.routes';
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use('/api/v1', businessRoutes);
 app.use('/api/v1', copilotRoutes);
 app.use('/api/v1', dashboardRoutes);
 app.use('/api/v1', individualRoutes);
+app.use('/api/v1', documentRoutes);
 
 // 404
 app.use((_req, res) => res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Route not found', details: [] } }));
