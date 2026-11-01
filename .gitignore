@@ -284,3 +284,9 @@ private-uploads/
 backend/storage/
 backend/private-uploads/
 
+# OS / Python caches
+.DS_Store
+__pycache__/
+*.py[cod]
+*$py.class
+

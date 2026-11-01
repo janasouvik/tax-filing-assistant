@@ -20,6 +20,7 @@ export interface PanVerificationData {
   firstName?: string;
   middleName?: string;
   lastName?: string;
+  dateOfBirth?: string | null;
   /** Setu returns this as optional */
   aadhaarSeedingStatus?: string | null;
 }
@@ -32,6 +33,7 @@ export interface PanVerificationResult {
   data?: PanVerificationData;
   /** Identifies which provider produced this result */
   verificationProvider: 'setu' | 'mock';
+  testRecordId?: string | null;
 }
 
 /** Structured error codes for safe client responses */

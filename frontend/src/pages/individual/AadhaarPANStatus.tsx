@@ -35,7 +35,7 @@ export default function AadhaarPANStatusPage() {
       setVerificationStatus(vs);
 
       // If PAN not verified, redirect
-      if (!vs.panVerified && !vs.profile?.panVerification) {
+      if (!vs.panVerified) {
         navigate('/individual/pan');
         return;
       }

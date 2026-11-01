@@ -5,8 +5,12 @@ import logger from './utils/logger';
 
 const start = async () => {
   try {
-    await prisma.$connect();
-    logger.info('Connected to PostgreSQL database');
+    try {
+      await prisma.$connect();
+      logger.info('Connected to PostgreSQL database');
+    } catch (dbErr) {
+      logger.warn({ err: dbErr }, 'PostgreSQL connection failed at startup. Server starting in standalone mode.');
+    }
 
     const server = app.listen(config.port, () => {
       logger.info(`TaxPilot API running on http://localhost:${config.port}`);

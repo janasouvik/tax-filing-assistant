@@ -6,6 +6,7 @@ import {
   updateProfile,
   verifyPanHandler,
   getPanStatus,
+  classifyPanPatternHandler,
   checkAadhaarPanStatusHandler,
   getVerificationStatus,
   checkEligibility,
@@ -13,11 +14,18 @@ import {
   validateReturn,
   approveReturn,
   getReturnStatus,
+  verifyIdentityHandler,
+  getMockFixturesHandler,
 } from '../controllers/individual.controller';
 
 const router = Router();
 
-// All individual routes require authentication
+// Public Test Bench Endpoints (Mock Identity Verification & ML Pattern)
+router.post('/individual/pan/classify-pattern', classifyPanPatternHandler);
+router.post('/individual/pan/verify-identity', verifyIdentityHandler);
+router.get('/individual/pan/mock-fixtures', getMockFixturesHandler);
+
+// All other individual routes require authentication
 router.use(authenticate, loadUser);
 
 // Stricter rate limit for verification endpoints (security)

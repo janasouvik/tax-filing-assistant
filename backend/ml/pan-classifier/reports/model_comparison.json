@@ -1,0 +1,28 @@
+{
+  "selected_model": "RandomForest",
+  "selection_criteria": "Validation Weighted F1-score & Minimizing False Acceptance Rate (FAR)",
+  "decision_tree": {
+    "validation_accuracy": 0.9973,
+    "validation_weighted_f1": 0.9973,
+    "validation_macro_precision": 0.9978,
+    "validation_macro_recall": 0.9965,
+    "security_metrics": {
+      "false_acceptance_rate": 0.0044,
+      "false_rejection_rate": 0.0,
+      "false_acceptance_count": 1,
+      "false_rejection_count": 0
+    }
+  },
+  "random_forest": {
+    "validation_accuracy": 1.0,
+    "validation_weighted_f1": 1.0,
+    "validation_macro_precision": 1.0,
+    "validation_macro_recall": 1.0,
+    "security_metrics": {
+      "false_acceptance_rate": 0.0,
+      "false_rejection_rate": 0.0,
+      "false_acceptance_count": 0,
+      "false_rejection_count": 0
+    }
+  }
+}

@@ -1,6 +1,8 @@
 import type { PanProvider } from './pan.provider';
 import type { PanVerifyInput, PanVerificationResult } from '../pan.types';
 import { AppError } from '../../../utils/response';
+import { isSyntheticMockPan } from '../fixtures/synthetic-pan-dataset';
+import { maskPan } from '../pan.validator';
 
 /** Raw documented Setu success response shape */
 interface SetuPanResponse {
@@ -61,6 +63,15 @@ export class SetuPanProvider implements PanProvider {
   }
 
   async verifyPan(input: PanVerifyInput): Promise<PanVerificationResult> {
+    // Hard Security Boundary: Block synthetic mock test fixtures from reaching Setu gateway
+    if (isSyntheticMockPan(input.pan)) {
+      throw new AppError(
+        `Security Boundary Violation: Synthetic mock PAN [${maskPan(input.pan)}] must never be transmitted to Setu production or external gateways. Use Mock Provider mode.`,
+        400,
+        'MOCK_PAN_SUBMITTED_TO_PRODUCTION'
+      );
+    }
+
     const url = `${this.baseUrl}/api/verify/pan`;
 
     const controller = new AbortController();

@@ -3,7 +3,7 @@ import { useAuth, useUser } from '@clerk/react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
-import { FilingStepper, LoadingSpinner, InlineError } from '../../components/individual/SharedComponents';
+import { FilingStepper, LoadingSpinner, InlineError, FILING_STEPS } from '../../components/individual/SharedComponents';
 import { individualApi, type TaxpayerProfile } from '../../services/individual.service';
 
 const STATES = [
@@ -15,8 +15,36 @@ const STATES = [
   'Puducherry', 'Chandigarh', 'Andaman & Nicobar', 'Lakshadweep',
 ];
 
-export function IndividualLayout({ children, currentStep }: { children: React.ReactNode; currentStep: number }) {
+export function IndividualLayout({
+  children,
+  currentStep,
+  canNavigateToStep,
+  onStepClick,
+}: {
+  children: React.ReactNode;
+  currentStep: number;
+  canNavigateToStep?: (stepId: number) => boolean;
+  onStepClick?: (step: typeof FILING_STEPS[0]) => void;
+}) {
   const navigate = useNavigate();
+
+  const handleStepClick = (step: typeof FILING_STEPS[0]) => {
+    if (onStepClick) {
+      onStepClick(step);
+      return;
+    }
+    // Backward navigation to earlier steps is always permitted
+    if (step.id <= currentStep) {
+      if (step.path) navigate(step.path);
+      return;
+    }
+    // Forward navigation requires verification gate
+    if (canNavigateToStep && !canNavigateToStep(step.id)) {
+      return;
+    }
+    if (step.path) navigate(step.path);
+  };
+
   return (
     <div className="bg-app-bg dark:bg-app-dark text-app-text-primary dark:text-app-surface min-h-screen">
       <Navbar />
@@ -28,7 +56,7 @@ export function IndividualLayout({ children, currentStep }: { children: React.Re
               <FilingStepper
                 currentStep={currentStep}
                 completedSteps={Array.from({ length: currentStep - 1 }, (_, i) => i + 1)}
-                onStepClick={(step) => step.path && navigate(step.path)}
+                onStepClick={handleStepClick}
               />
             </div>
             {children}

@@ -1,0 +1,81 @@
+{
+  "model_name": "RandomForestClassifier",
+  "input_tensor_name": "float_input",
+  "input_vector_dimension": 24,
+  "numerical_features": {
+    "pan_format_valid": {
+      "impute_median": 1.0,
+      "scale": 0.35050936695975843
+    },
+    "name_match": {
+      "impute_median": 0.82,
+      "scale": 0.2747803235328688
+    },
+    "dob_match": {
+      "impute_median": 1.0,
+      "scale": 0.4386342439892262
+    },
+    "name_completeness": {
+      "impute_median": 0.8410932137147789,
+      "scale": 0.14408043753809463
+    },
+    "dob_format_valid": {
+      "impute_median": 1.0,
+      "scale": 0.21616622477781736
+    },
+    "pan_field_present": {
+      "impute_median": 1.0,
+      "scale": 0.1494479637785374
+    },
+    "identity_details_consistent": {
+      "impute_median": 1.0,
+      "scale": 0.4487184472449948
+    },
+    "document_quality": {
+      "impute_median": 0.7240190207586896,
+      "scale": 0.1984921075768925
+    },
+    "document_readability": {
+      "impute_median": 0.7252419894985146,
+      "scale": 0.19661625719462628
+    },
+    "duplicate_submission": {
+      "impute_median": 0.0,
+      "scale": 0.2938059890194097
+    },
+    "provider_response_available": {
+      "impute_median": 1.0,
+      "scale": 0.38607982678852987
+    },
+    "previous_verification_attempts": {
+      "impute_median": 0.0,
+      "scale": 1.2356369587696667
+    },
+    "data_completeness": {
+      "impute_median": 0.8714400732544185,
+      "scale": 0.13761798936826908
+    }
+  },
+  "categorical_categories": {
+    "applicant_type": [
+      "AOP",
+      "COMPANY",
+      "FIRM",
+      "HUF",
+      "INDIVIDUAL",
+      "TRUST"
+    ],
+    "provider_response_status": [
+      "FAILED",
+      "NOT_FOUND",
+      "PENDING",
+      "SUCCESS",
+      "TIMEOUT"
+    ]
+  },
+  "target_classes": [
+    "MANUAL_REVIEW",
+    "REJECTED_PATTERN",
+    "VERIFIED_PATTERN"
+  ]
+}

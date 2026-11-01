@@ -2,7 +2,13 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { AppError, asyncHandler, successResponse } from '../utils/response';
 import prisma from '../config/prisma';
-import { verifyPanWithProvider } from '../modules/pan/pan.service';
+import {
+  verifyPanWithProvider,
+  IdentityMatchingService,
+  PanIdentityVerificationService,
+  SYNTHETIC_PAN_DATASET,
+} from '../modules/pan/pan.service';
+import { PanPatternClassifierService } from '../modules/pan/ml/pan-classifier.service';
 import { isValidPanFormat, maskPan, normalizePan } from '../modules/pan/pan.validator';
 import { checkAadhaarPanStatus } from '../services/aadhaar-pan.service';
 import { getClientIp, generateApprovalHash, CanonicalFinancialSnapshot } from '../utils/helpers';
@@ -23,10 +29,12 @@ const profileUpdateSchema = z.object({
 });
 
 const panVerifySchema = z.object({
-  pan: z.string().min(1).max(10),
+  pan: z.string().min(1).max(25),
   name: z.string().optional(),
   dob: z.string().optional(),
   mobile: z.string().optional(),
+  provider: z.enum(['mock', 'setu']).optional(),
+  isMockFixture: z.boolean().optional(),
 });
 
 const aadhaarPanSchema = z.object({
@@ -124,9 +132,10 @@ export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response
 /**
  * POST /api/v1/individual/pan/verify
  *
- * Accepts: { pan: string, consent: true }
- * Validates consent server-side, normalizes PAN, calls Setu or mock provider,
- * stores result, and returns a safe normalized response.
+ * Accepts: { pan: string, name?: string, dob?: string, mobile?: string }
+ * Normalizes input, calls unified PanIdentityVerificationService,
+ * stores result in Prisma, updates taxpayer profile/onboarding step,
+ * updates AadhaarPanStatus if linkage is known, and returns standardized response.
  */
 export const verifyPanHandler = asyncHandler(async (req: AuthRequest, res: Response, next: NextFunction) => {
   const parsed = panVerifySchema.safeParse(req.body);
@@ -135,44 +144,48 @@ export const verifyPanHandler = asyncHandler(async (req: AuthRequest, res: Respo
     return next(new AppError('Invalid PAN verification request', 400, 'VALIDATION_ERROR', issues));
   }
 
-  const { pan: rawPan, name, dob } = parsed.data;
+  const { pan: rawPan, name, dob, mobile, provider, isMockFixture } = parsed.data;
 
-  // Normalize and validate PAN format
+  // Normalize PAN
   const pan = normalizePan(rawPan);
-  if (!isValidPanFormat(pan)) {
-    return next(new AppError('Invalid PAN format. Expected: ABCDE1234F (5 letters, 4 digits, 1 letter)', 400, 'INVALID_PAN_FORMAT'));
-  }
 
   const workspaceId = await getWorkspaceForUser(req.user!.userId);
   const profile = await getOrCreateTaxpayerProfile(workspaceId);
 
-  // Call Setu / mock provider (hardcode consent to true as the UI form removed it)
+  // Call the unified PanIdentityVerificationService
   let result;
   try {
-    result = await verifyPanWithProvider(pan);
+    result = await PanIdentityVerificationService.verifyIdentity({
+      pan,
+      name,
+      dob,
+      mobile,
+      provider,
+      isMockFixture,
+    });
   } catch (err: any) {
-    // Re-throw known AppErrors; wrap unexpected errors
+    // Re-throw known AppErrors (e.g., MOCK_PAN_SUBMITTED_TO_PRODUCTION); wrap unexpected errors
     if (err?.statusCode) throw err;
     return next(new AppError('PAN verification service unavailable. Please try again.', 503, 'SERVICE_UNAVAILABLE'));
   }
 
-  const isVerified = result.verification === 'success';
-  const isMock = result.verificationProvider === 'mock';
+  const isVerified = result.verificationStatus === 'PAN_VERIFIED';
+  const isMock = result.isMockResponse;
 
-  // Calculate name match (basic exact match ignoring case)
-  let nameMatch: boolean | null = null;
-  if (name && result.data?.fullName) {
-    nameMatch = name.toLowerCase() === result.data.fullName.toLowerCase();
-  }
-
-  // Determine persisted status
-  let panStatus: string;
+  // Map result.verificationStatus to Prisma PANVerificationStatus enum
+  let dbStatus: 'VERIFIED' | 'SANDBOX' | 'NAME_MISMATCH' | 'DOB_MISMATCH' | 'NOT_FOUND' | 'FAILED' | 'SERVICE_UNAVAILABLE';
   if (isVerified) {
-    panStatus = isMock ? 'SANDBOX' : 'VERIFIED';
+    dbStatus = isMock ? 'SANDBOX' : 'VERIFIED';
+  } else if (result.verificationStatus === 'NAME_MISMATCH') {
+    dbStatus = 'NAME_MISMATCH';
+  } else if (result.verificationStatus === 'DOB_MISMATCH') {
+    dbStatus = 'DOB_MISMATCH';
+  } else if (result.verificationStatus === 'INVALID_PAN_FORMAT') {
+    dbStatus = 'FAILED';
+  } else if (result.verificationStatus === 'INVALID_PAN') {
+    dbStatus = result.panStatus === 'NOT_FOUND' ? 'NOT_FOUND' : 'FAILED';
   } else {
-    const msg = (result.message || '').toLowerCase();
-    if (msg.includes('not found')) panStatus = 'NOT_FOUND';
-    else panStatus = 'FAILED';
+    dbStatus = 'FAILED';
   }
 
   // Persist result — upsert into PANVerification
@@ -182,56 +195,52 @@ export const verifyPanHandler = asyncHandler(async (req: AuthRequest, res: Respo
       taxpayerProfileId: profile.id,
       pan,
       panMasked: maskPan(pan),
-      status: panStatus as any,
-      panStatus: isVerified ? 'ACTIVE' : panStatus,
+      status: dbStatus as any,
+      panStatus: result.panStatus === 'VALID' ? 'ACTIVE' : result.panStatus,
       isSandbox: isMock,
-      submittedName: name,
-      submittedDob: dob,
-      verifiedName: result.data?.fullName || null,
-      nameMatch,
-      dobMatch: true, // Mocking DOB match since Setu doesn't return DOB
-      // Setu-specific fields
-      category: result.data?.category,
-      fullName: result.data?.fullName,
-      firstName: result.data?.firstName,
-      middleName: result.data?.middleName,
-      lastName: result.data?.lastName,
-      aadhaarSeedingStatus: result.data?.aadhaarSeedingStatus ?? null,
-      verificationProvider: result.verificationProvider,
-      traceId: result.traceId,
-      setuVerification: result.verification,
-      verifiedAt: isVerified ? new Date() : null,
+      submittedName: result.submittedName || name || null,
+      submittedDob: result.submittedDob || dob || null,
+      verifiedName: result.registeredName || null,
+      verifiedDob: result.registeredDob || null,
+      nameMatch: result.nameMatch,
+      dobMatch: result.dobMatch,
+      category: (result.details as any)?.category || 'Individual',
+      fullName: result.registeredName || null,
+      aadhaarSeedingStatus: result.aadhaarLinkStatus,
+      verificationProvider: result.provider.toLowerCase(),
+      traceId: result.details?.traceId || null,
+      setuVerification: result.success ? 'success' : 'failed',
+      verifiedAt: isVerified ? new Date(result.verifiedAt) : null,
     },
     update: {
       pan,
       panMasked: maskPan(pan),
-      status: panStatus as any,
-      panStatus: isVerified ? 'ACTIVE' : panStatus,
+      status: dbStatus as any,
+      panStatus: result.panStatus === 'VALID' ? 'ACTIVE' : result.panStatus,
       isSandbox: isMock,
-      submittedName: name,
-      submittedDob: dob,
-      verifiedName: result.data?.fullName || null,
-      nameMatch,
-      dobMatch: true,
-      category: result.data?.category,
-      fullName: result.data?.fullName,
-      firstName: result.data?.firstName,
-      middleName: result.data?.middleName,
-      lastName: result.data?.lastName,
-      aadhaarSeedingStatus: result.data?.aadhaarSeedingStatus ?? null,
-      verificationProvider: result.verificationProvider,
-      traceId: result.traceId,
-      setuVerification: result.verification,
-      verifiedAt: isVerified ? new Date() : null,
+      submittedName: result.submittedName || name || null,
+      submittedDob: result.submittedDob || dob || null,
+      verifiedName: result.registeredName || null,
+      verifiedDob: result.registeredDob || null,
+      nameMatch: result.nameMatch,
+      dobMatch: result.dobMatch,
+      category: (result.details as any)?.category || 'Individual',
+      fullName: result.registeredName || null,
+      aadhaarSeedingStatus: result.aadhaarLinkStatus,
+      verificationProvider: result.provider.toLowerCase(),
+      traceId: result.details?.traceId || null,
+      setuVerification: result.success ? 'success' : 'failed',
+      verifiedAt: isVerified ? new Date(result.verifiedAt) : null,
     },
   });
 
-  // Update workspace masked PAN and onboarding step
+  // Update workspace masked PAN
   await prisma.workspace.update({
     where: { id: workspaceId },
     data: { pan: maskPan(pan) },
   });
 
+  // If verified, advance taxpayer profile onboarding step
   if (isVerified) {
     await prisma.taxpayerProfile.update({
       where: { id: profile.id },
@@ -239,14 +248,9 @@ export const verifyPanHandler = asyncHandler(async (req: AuthRequest, res: Respo
     });
   }
 
-  // If the PAN provider also returns Aadhaar seeding status, populate the AadhaarPanStatus
-  if (isVerified && result.data?.aadhaarSeedingStatus) {
-    const seedingStatus = result.data.aadhaarSeedingStatus.toUpperCase();
-    // Map Setu/Provider status to our internal AadhaarPanLinkStatusValue
-    let mappedStatus = 'UNKNOWN';
-    if (seedingStatus === 'LINKED' || seedingStatus === 'Y') mappedStatus = 'LINKED';
-    else if (seedingStatus === 'NOT_LINKED' || seedingStatus === 'N') mappedStatus = 'NOT_LINKED';
-    else if (seedingStatus === 'FAILED') mappedStatus = 'FAILED';
+  // If verified and Aadhaar linkage is known, update AadhaarPanStatus
+  if (isVerified && (result.aadhaarLinkStatus === 'LINKED' || result.aadhaarLinkStatus === 'NOT_LINKED')) {
+    const mappedStatus = result.aadhaarLinkStatus === 'LINKED' ? 'LINKED' : 'NOT_LINKED';
 
     await prisma.aadhaarPanStatus.upsert({
       where: { taxpayerProfileId: profile.id },
@@ -254,13 +258,13 @@ export const verifyPanHandler = asyncHandler(async (req: AuthRequest, res: Respo
         taxpayerProfileId: profile.id,
         status: mappedStatus as any,
         isSandbox: isMock,
-        providerReference: result.traceId,
+        providerReference: result.details?.traceId || null,
         checkedAt: new Date(),
       },
       update: {
         status: mappedStatus as any,
         isSandbox: isMock,
-        providerReference: result.traceId,
+        providerReference: result.details?.traceId || null,
         checkedAt: new Date(),
       },
     });
@@ -273,24 +277,36 @@ export const verifyPanHandler = asyncHandler(async (req: AuthRequest, res: Respo
     }
   }
 
-  // Return stable TaxPilot API contract — never return raw Setu response
+  // Return standardized unified response matching PanIdentityVerificationResult contract
   res.json(successResponse({
-    success: result.verification === 'success',
-    verification: result.verification,
+    success: result.success,
+    verificationStatus: result.verificationStatus,
+    panStatus: result.panStatus,
+    nameMatch: result.nameMatch,
+    dobMatch: result.dobMatch,
+    aadhaarLinkStatus: result.aadhaarLinkStatus,
+    registeredName: result.registeredName,
+    registeredDob: result.registeredDob,
+    submittedName: result.submittedName,
+    submittedDob: result.submittedDob,
+    maskedPan: result.maskedPan,
+    provider: result.provider,
     message: result.message,
+    testRecordId: result.testRecordId,
+    isMockResponse: result.isMockResponse,
+    verifiedAt: result.verifiedAt,
+    details: result.details,
+    // Backward-compatibility aliases for legacy callers:
+    verification: result.success ? 'success' : 'failed',
+    verificationProvider: result.provider.toLowerCase(),
+    isSandbox: result.isMockResponse,
+    traceId: result.details?.traceId,
     data: {
-      pan: maskPan(pan),
-      category: result.data?.category ?? null,
-      fullName: result.data?.fullName ?? null,
-      firstName: result.data?.firstName ?? null,
-      middleName: result.data?.middleName ?? null,
-      lastName: result.data?.lastName ?? null,
-      // Return null (not missing) when Setu didn't provide this — never invent a value
-      aadhaarSeedingStatus: result.data?.aadhaarSeedingStatus ?? null,
+      pan: result.maskedPan,
+      category: (result.details as any)?.category || 'Individual',
+      fullName: result.registeredName,
+      aadhaarSeedingStatus: result.aadhaarLinkStatus,
     },
-    verificationProvider: result.verificationProvider,
-    isSandbox: isMock,
-    traceId: result.traceId,
     panVerification,
   }));
 });
@@ -308,6 +324,49 @@ export const getPanStatus = asyncHandler(async (req: AuthRequest, res: Response,
   res.json(successResponse({
     panVerification: profile?.panVerification || null,
     isVerified: profile?.panVerification?.status === 'VERIFIED' || profile?.panVerification?.status === 'SANDBOX',
+  }));
+});
+
+/**
+ * POST /api/v1/individual/pan/classify-pattern
+ * Experimental ML PAN verification pattern triage & risk classification.
+ * Uses local ONNX Runtime inference (purely offline, non-destructive).
+ */
+export const classifyPanPatternHandler = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const options: { modelPath?: string; simulateException?: boolean } = {};
+  if (req.headers['x-simulate-exception'] === 'true' || req.body?.simulateException) {
+    options.simulateException = true;
+  }
+  if (typeof req.headers['x-model-path'] === 'string') {
+    options.modelPath = req.headers['x-model-path'];
+  } else if (typeof req.body?.modelPath === 'string') {
+    options.modelPath = req.body.modelPath;
+  }
+
+  const result = await PanPatternClassifierService.classify(req.body, options);
+  res.json(successResponse(result));
+});
+
+/**
+ * POST /api/v1/individual/pan/verify-identity
+ * Deterministic Mock PAN Identity Matching (Field-by-field Name, DOB, PAN verification).
+ * Unauthenticated for test bench and mock evaluation.
+ */
+export const verifyIdentityHandler = asyncHandler(async (req: any, res: Response) => {
+  const { pan, name, dob, mobile, provider } = req.body || {};
+  const result = await PanIdentityVerificationService.verifyIdentity({ pan, name, dob, mobile, provider });
+  res.json(successResponse(result));
+});
+
+/**
+ * GET /api/v1/individual/pan/mock-fixtures
+ * Returns the 25 synthetic PAN identity testing records for development and testing.
+ */
+export const getMockFixturesHandler = asyncHandler(async (_req: any, res: Response) => {
+  res.json(successResponse({
+    total: SYNTHETIC_PAN_DATASET.length,
+    fixtures: SYNTHETIC_PAN_DATASET,
+    notice: 'Synthetic test fixtures. Hard mock-only boundary enforced: strictly blocked from Setu.',
   }));
 });
 

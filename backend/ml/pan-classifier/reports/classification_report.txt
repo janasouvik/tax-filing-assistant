@@ -1,0 +1,49 @@
+========================================================================
+TAXPILOT IDENTITY ML CLASSIFIER — TEST SET EVALUATION REPORT
+Synthetic-Data Trained Diagnostic Prototype (Stage 1 & 2)
+========================================================================
+
+Model Architecture:       RandomForestClassifier
+Test Partition Size:      375 samples (strictly held-out)
+Overall Accuracy:         1.0000 (100.00%)
+Macro Precision:          1.0000
+Macro Recall:             1.0000
+Macro F1-Score:           1.0000
+Weighted F1-Score:        1.0000
+
+------------------------------------------------------------------------
+SECURITY & RISK METRICS:
+------------------------------------------------------------------------
+False Acceptance Rate (FAR):  0.0000 (0.00%)
+  - Non-verified samples misclassified as VERIFIED_PATTERN: 0
+False Rejection Rate (FRR):   0.0000 (0.00%)
+  - Verified samples misclassified as REJECTED_PATTERN:    0
+
+------------------------------------------------------------------------
+PER-CLASS CLASSIFICATION BREAKDOWN:
+------------------------------------------------------------------------
+                  precision    recall  f1-score   support
+
+   MANUAL_REVIEW     1.0000    1.0000    1.0000        94
+REJECTED_PATTERN     1.0000    1.0000    1.0000       131
+VERIFIED_PATTERN     1.0000    1.0000    1.0000       150
+
+        accuracy                         1.0000       375
+       macro avg     1.0000    1.0000    1.0000       375
+    weighted avg     1.0000    1.0000    1.0000       375
+
+------------------------------------------------------------------------
+CONFUSION MATRIX:
+------------------------------------------------------------------------
+Labels: ['MANUAL_REVIEW', 'REJECTED_PATTERN', 'VERIFIED_PATTERN']
+[[ 94   0   0]
+ [  0 131   0]
+ [  0   0 150]]
+
+========================================================================
+IMPORTANT DISCLAIMER:
+This model was trained on synthetic data for offline verification pattern
+triage and test bench architecture. Its accuracy metrics do NOT represent
+real-world statutory PAN verification. Real PAN authentication must remain
+authoritative via certified ERI / Setu providers.
+========================================================================

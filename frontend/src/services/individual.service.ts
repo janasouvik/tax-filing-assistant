@@ -106,22 +106,60 @@ export interface PANVerificationData {
   aadhaarSeedingStatus?: string | null;
 }
 
+export type VerificationOutcome =
+  | 'PAN_VERIFIED'
+  | 'INVALID_PAN'
+  | 'INVALID_PAN_FORMAT'
+  | 'NAME_MISMATCH'
+  | 'DOB_MISMATCH'
+  | 'UNKNOWN'
+  | 'ERROR';
+
+export type PanRecordStatus = 'VALID' | 'NOT_FOUND' | 'INVALID';
+
+export interface FieldComparisonDetail {
+  submitted: string;
+  registered: string | null;
+  matched: boolean | null;
+}
+
 export interface PANVerificationResult {
   success: boolean;
-  verification: 'success' | 'failed';
-  message?: string;
-  data?: PANVerificationData;
-  verificationProvider: string;
-  traceId?: string;
-  panVerification: PANVerification;
+  verificationStatus: VerificationOutcome;
+  panStatus: PanRecordStatus;
+  nameMatch: boolean | null;
+  dobMatch: boolean | null;
+  aadhaarLinkStatus: AadhaarPanLinkStatusValue;
+  registeredName: string | null;
+  registeredDob: string | null;
+  submittedName: string;
+  submittedDob: string;
+  maskedPan: string;
+  provider: 'MOCK' | 'SETU' | string;
+  message: string;
+  testRecordId?: string | null;
+  isMockResponse: boolean;
+  verifiedAt: string;
+  details?: {
+    panFound: boolean;
+    formatValid: boolean;
+    nameComparison?: FieldComparisonDetail;
+    dobComparison?: FieldComparisonDetail;
+    providerRawVerification?: string;
+    traceId?: string;
+  };
+  panVerification?: PANVerification;
+  // Backward compatibility fields
+  verification?: 'success' | 'failed';
+  verificationProvider?: string;
   isSandbox?: boolean;
+  traceId?: string;
   pan?: string;
   name?: string;
   dob?: string;
-  nameMatch?: boolean;
-  dobMatch?: boolean;
   status?: string;
   verified?: boolean;
+  data?: PANVerificationData;
 }
 
 export type AadhaarPanLinkStatusValue =
@@ -179,7 +217,10 @@ export const individualApi = {
   updateProfile: (getToken: () => Promise<string | null>, data: Partial<TaxpayerProfile>) =>
     apiRequest<TaxpayerProfile>('/individual/profile', { method: 'PUT', body: JSON.stringify(data) }, getToken),
 
-  verifyPan: (getToken: () => Promise<string | null>, data: { pan: string; name?: string; dob?: string; mobile?: string }) =>
+  verifyPan: (
+    getToken: () => Promise<string | null>,
+    data: { pan: string; name?: string; dob?: string; mobile?: string; provider?: 'mock' | 'setu'; isMockFixture?: boolean }
+  ) =>
     apiRequest<PANVerificationResult>('/individual/pan/verify', { method: 'POST', body: JSON.stringify(data) }, getToken),
 
   getPanStatus: (getToken: () => Promise<string | null>) =>
@@ -193,6 +234,9 @@ export const individualApi = {
 
   checkEligibility: (getToken: () => Promise<string | null>) =>
     apiRequest<EligibilityResult>('/individual/eligibility/check', { method: 'POST', body: JSON.stringify({}) }, getToken),
+
+  getMockFixtures: (getToken: () => Promise<string | null>) =>
+    apiRequest<{ total: number; fixtures: any[]; notice: string }>('/individual/pan/mock-fixtures', { method: 'GET' }, getToken),
 };
 
 export interface FilingResult {
