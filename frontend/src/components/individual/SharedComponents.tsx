@@ -75,10 +75,13 @@ interface FileStepperProps {
   currentStep: number;
   completedSteps?: number[];
   errorSteps?: number[];
+  maxUnlockedStep?: number;
   onStepClick?: (step: typeof FILING_STEPS[0]) => void;
 }
 
-export function FilingStepper({ currentStep, completedSteps = [], errorSteps = [], onStepClick }: FileStepperProps) {
+export function FilingStepper({ currentStep, completedSteps = [], errorSteps = [], maxUnlockedStep, onStepClick }: FileStepperProps) {
+  const effectiveMax = maxUnlockedStep ?? currentStep;
+
   const getStatus = (stepId: number): FilingStep['status'] => {
     if (errorSteps.includes(stepId)) return 'error';
     if (stepId === currentStep) return 'current';
@@ -92,13 +95,15 @@ export function FilingStepper({ currentStep, completedSteps = [], errorSteps = [
         {FILING_STEPS.map((step, idx) => {
           const status = getStatus(step.id);
           const isLast = idx === FILING_STEPS.length - 1;
+          const isClickable = step.id <= effectiveMax;
 
           return (
             <li key={step.id} className="flex items-center">
               <button
-                onClick={() => onStepClick?.(step)}
-                className="flex flex-col items-center gap-1.5 px-2 group"
-                aria-label={`Step ${step.id}: ${step.label} — ${status}`}
+                onClick={() => isClickable && onStepClick?.(step)}
+                disabled={!isClickable}
+                className={`flex flex-col items-center gap-1.5 px-2 group ${!isClickable ? 'cursor-not-allowed opacity-45' : 'cursor-pointer'}`}
+                aria-label={`Step ${step.id}: ${step.label} — ${status}${!isClickable ? ' (Locked)' : ''}`}
                 aria-current={status === 'current' ? 'step' : undefined}
                 type="button"
               >

@@ -28,21 +28,46 @@ export function IndividualLayout({
 }) {
   const navigate = useNavigate();
 
+  const getStoredMaxStep = (): number => {
+    try {
+      const stored = localStorage.getItem('taxpilot_max_unlocked_step');
+      return stored ? Math.max(parseInt(stored, 10), currentStep) : currentStep;
+    } catch {
+      return currentStep;
+    }
+  };
+
+  const [maxUnlocked, setMaxUnlocked] = useState<number>(getStoredMaxStep);
+
+  useEffect(() => {
+    try {
+      const currentMax = getStoredMaxStep();
+      if (currentStep > currentMax) {
+        localStorage.setItem('taxpilot_max_unlocked_step', String(currentStep));
+        setMaxUnlocked(currentStep);
+      } else {
+        setMaxUnlocked(currentMax);
+      }
+    } catch {
+      // Ignore localStorage exceptions in restrictive environments
+    }
+  }, [currentStep]);
+
   const handleStepClick = (step: typeof FILING_STEPS[0]) => {
     if (onStepClick) {
       onStepClick(step);
       return;
     }
-    // Backward navigation to earlier steps is always permitted
-    if (step.id <= currentStep) {
+    // Only allow navigation to steps that have been reached/unlocked
+    if (step.id <= maxUnlocked) {
+      if (canNavigateToStep && !canNavigateToStep(step.id)) {
+        return;
+      }
       if (step.path) navigate(step.path);
       return;
     }
-    // Forward navigation requires verification gate
-    if (canNavigateToStep && !canNavigateToStep(step.id)) {
-      return;
-    }
-    if (step.path) navigate(step.path);
+    // Forward jumping to locked future steps is blocked
+    return;
   };
 
   return (
@@ -56,6 +81,7 @@ export function IndividualLayout({
               <FilingStepper
                 currentStep={currentStep}
                 completedSteps={Array.from({ length: currentStep - 1 }, (_, i) => i + 1)}
+                maxUnlockedStep={maxUnlocked}
                 onStepClick={handleStepClick}
               />
             </div>
