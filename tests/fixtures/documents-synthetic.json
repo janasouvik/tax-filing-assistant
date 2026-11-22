@@ -1,0 +1,62 @@
+{
+  "form16": {
+    "employerName": "TechCorp India Ltd",
+    "employerTan": "BLRT12345A",
+    "employeePan": "ABCDE1234F",
+    "employeeName": "Aarav Sharma",
+    "assessmentYear": "2026-27",
+    "grossSalary": 800000,
+    "standardDeduction": 75000,
+    "taxableSalary": 725000,
+    "tdsDeducted": 25000,
+    "confidence": 0.99
+  },
+  "bankStatement": {
+    "bankName": "State Bank of India",
+    "accountNumber": "XXXXXX4589",
+    "period": "01-04-2025 to 31-03-2026",
+    "savingsInterest": 12500,
+    "totalInterest": 12500,
+    "confidence": 0.97
+  },
+  "fdCertificate": {
+    "bankName": "HDFC Bank Ltd",
+    "fdNumber": "FD8892011",
+    "financialYear": "2025-26",
+    "fdInterest": 35000,
+    "tdsDeducted": 3500,
+    "confidence": 0.98
+  },
+  "rentalRecord": {
+    "propertyType": "RESIDENTIAL",
+    "address": "Flat 402, Green Acres, Bengaluru",
+    "annualRentReceived": 120000,
+    "municipalTaxes": 0,
+    "standardDeduction30Percent": 36000,
+    "netRentalIncome": 84000,
+    "confidence": 0.95
+  },
+  "capitalGains": {
+    "assetType": "EQUITY_SHARES_LISTED",
+    "shortTermGain": 20000,
+    "longTermGain": 30000,
+    "totalCapitalGains": 50000,
+    "sttPaid": true,
+    "confidence": 0.96
+  },
+  "aisRecord": {
+    "pan": "ABCDE1234F",
+    "financialYear": "2025-26",
+    "assessmentYear": "2026-27",
+    "salaryReported": 800000,
+    "savingsBankInterest": 15000,
+    "mismatchDetails": {
+      "field": "savingsBankInterest",
+      "bankReported": 12500,
+      "aisReported": 15000,
+      "variance": 2500,
+      "expectedStatus": "POTENTIAL_MISMATCH",
+      "guidance": "Mismatch requires verification. Cross-check multiple bank accounts or interest accruals."
+    }
+  }
+}

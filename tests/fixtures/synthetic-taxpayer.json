@@ -1,0 +1,40 @@
+{
+  "taxpayerId": "tp-synth-001",
+  "pan": "ABCDE1234F",
+  "name": "Aarav Sharma",
+  "email": "aarav.sharma@example.in",
+  "assessmentYear": "AY 2026-27",
+  "financialYear": "2025-26",
+  "residentialStatus": "RESIDENT",
+  "category": "INDIVIDUAL",
+  "incomeProfile": {
+    "salary": 800000,
+    "bankInterest": 25000,
+    "fdInterest": 35000,
+    "rentalIncome": 120000,
+    "capitalGains": 50000
+  },
+  "rawAdditiveTotal": 1030000,
+  "deductions": {
+    "sec80C": 150000,
+    "sec80D": 25000,
+    "sec80TTA": 10000
+  },
+  "tdsEntries": [
+    {
+      "deductor": "TechCorp India Ltd",
+      "tan": "BLRT12345A",
+      "section": "192",
+      "amountPaid": 800000,
+      "tdsDeducted": 25000
+    },
+    {
+      "deductor": "State Bank of India",
+      "tan": "BLRS54321B",
+      "section": "194A",
+      "amountPaid": 35000,
+      "tdsDeducted": 3500
+    }
+  ],
+  "totalTdsPaid": 28500
+}

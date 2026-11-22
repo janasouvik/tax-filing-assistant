@@ -1,0 +1,22 @@
+{
+  "name": "taxpilot-workspace",
+  "version": "1.0.0",
+  "description": "TaxPilot: AI-Assisted Automated Tax Filing System for Individuals and SMEs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "npm run test:unit && npm run test:tax-engine && npm run test:ai && npm run test:security && npm run test:integration",
+    "test:unit": ".\\backend\\node_modules\\.bin\\vitest.cmd run tests/unit/",
+    "test:tax-engine": ".\\backend\\node_modules\\.bin\\vitest.cmd run tests/tax-engine/",
+    "test:ai": ".\\backend\\node_modules\\.bin\\vitest.cmd run tests/ai/",
+    "test:security": ".\\backend\\node_modules\\.bin\\vitest.cmd run tests/security/",
+    "test:integration": "cross-env DATABASE_URL=postgresql://postgres:1245@localhost:5432/taxpilot_test_db .\\backend\\node_modules\\.bin\\vitest.cmd run tests/integration/",
+    "test:e2e": ".\\backend\\node_modules\\.bin\\vitest.cmd run tests/e2e/",
+    "test:coverage": ".\\backend\\node_modules\\.bin\\vitest.cmd run tests/ --coverage",
+    "test:backend:all": "npm --prefix backend run test:all",
+    "test:frontend:e2e": "npm --prefix frontend run test:e2e"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
+}
