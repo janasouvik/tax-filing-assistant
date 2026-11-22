@@ -13,6 +13,26 @@ export default function IndividualTaxDashboard() {
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('taxpilot_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('taxpilot_sidebar_collapsed', String(next));
+      } catch {}
+      return next;
+    });
+  };
+
   const fetchVerificationStatus = useCallback(async () => {
     try {
       const status = await individualApi.getVerificationStatus(getToken);
@@ -36,161 +56,152 @@ export default function IndividualTaxDashboard() {
 
   return (
     <div className="bg-app-bg dark:bg-app-dark text-app-text-primary dark:text-app-surface min-h-screen tabular-nums">
+      {/* ==================== GLOBAL TOP NAVBAR (Allows browsing Home, Individuals, SMEs, etc.) ==================== */}
       <Navbar />
-      {/* ==================== LEFT PERSISTENT SIDEBAR (~250px) ==================== */}
-      <aside className="fixed left-0 top-16 h-[calc(100vh-64px)] w-[250px] bg-[#F7F5F1] border-r border-app-border dark:border-app-dark-border-sidebar flex flex-col z-40 select-none">
+
+      {/* Mobile Sidebar Backdrop Overlay */}
+      {mobileSidebarOpen && (
+        <div
+          onClick={() => setMobileSidebarOpen(false)}
+          className="fixed inset-0 top-16 bg-black/60 z-30 md:hidden backdrop-blur-xs transition-opacity"
+        />
+      )}
+
+      {/* ==================== LEFT PERSISTENT SIDEBAR ==================== */}
+      <aside
+        className={`fixed left-0 top-16 h-[calc(100vh-64px)] ${
+          isCollapsed ? 'md:w-[70px]' : 'md:w-[250px]'
+        } w-[260px] ${
+          mobileSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'
+        } bg-[#F7F5F1] dark:bg-[#20150E] border-r border-app-border dark:border-app-dark-border flex flex-col justify-between z-40 select-none transition-all duration-300 ease-in-out`}
+      >
+        {/* Top Header with Shrink/Expand Toggle (No duplicate logo because logo is in Navbar) */}
+        <div className={`h-14 border-b border-app-border/70 dark:border-app-dark-border flex items-center ${isCollapsed ? 'md:justify-center px-3' : 'justify-between px-4'} transition-all duration-200`}>
+          {(!isCollapsed || mobileSidebarOpen) && (
+            <span className="text-[12px] font-semibold text-app-text-muted dark:text-gray-400 uppercase tracking-wider">
+              Navigation
+            </span>
+          )}
+          <button
+            onClick={() => {
+              if (window.innerWidth < 768) {
+                setMobileSidebarOpen(false);
+              } else {
+                toggleSidebar();
+              }
+            }}
+            type="button"
+            className="p-1.5 rounded-md text-app-text-secondary dark:text-gray-400 hover:text-app-text-primary dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+            title={isCollapsed ? 'Expand sidebar' : 'Shrink sidebar'}
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Shrink sidebar'}
+          >
+            <span className="material-symbols-outlined text-[19px]">
+              {mobileSidebarOpen ? 'close' : isCollapsed ? 'chevron_right' : 'chevron_left'}
+            </span>
+          </button>
+        </div>
+
         {/* Navigation List */}
-        <nav className="flex-1 px-3 py-5 overflow-y-auto space-y-6">
+        <nav className={`flex-1 ${isCollapsed ? 'md:px-2' : 'px-3'} px-3 py-5 overflow-y-auto space-y-6 transition-all duration-200`}>
           <div>
-            <Link className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#f4dbcd] text-app-text-primary dark:text-app-surface font-medium text-[14px] border-l-[3px] border-app-accent transition-colors shadow-xs" to="/individualtaxdashboard">
-              <span className="material-symbols-outlined text-[19px] text-app-accent" style={{ fontVariationSettings: "'FILL' 1" }}>dashboard</span>
-              <span>Overview</span>
+            <Link
+              className={`flex items-center ${isCollapsed ? 'md:justify-center md:px-2' : 'gap-3 px-3'} gap-3 px-3 py-2.5 rounded-lg bg-secondary-container dark:bg-[#3E291C] text-app-text-primary dark:text-amber-200 font-medium text-[14px] border-l-[3px] border-app-accent transition-colors shadow-xs`}
+              to="/individualtaxdashboard"
+              onClick={() => setMobileSidebarOpen(false)}
+              title="Overview"
+            >
+              <span className="material-symbols-outlined text-[20px] text-app-accent dark:text-amber-400 shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>dashboard</span>
+              {(!isCollapsed || mobileSidebarOpen) && <span>Overview</span>}
             </Link>
           </div>
-          {/* Section: IDENTITY VERIFICATION */}
-          <div>
-            <div className="px-3 pb-2 text-[11px] font-semibold text-app-text-muted dark:text-gray-400 tracking-wider uppercase">
-              Identity & Verification
-            </div>
-            <div className="space-y-0.5">
-              <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="/individual/profile">
-                <span className="material-symbols-outlined text-[19px]">person</span>
-                <span>Personal Profile</span>
-              </Link>
-              <Link className="flex items-center justify-between px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="/individual/pan">
-                <span className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[19px]">verified_user</span>
-                  <span>PAN Verification</span>
-                </span>
-                {verificationStatus?.panVerified && (
-                  <span className="material-symbols-outlined text-[14px] text-app-success" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                )}
-              </Link>
-              <Link className="flex items-center justify-between px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="/individual/aadhaar">
-                <span className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[19px]">fingerprint</span>
-                  <span>Aadhaar-PAN Status</span>
-                </span>
-                {verificationStatus?.aadhaarLinked && (
-                  <span className="material-symbols-outlined text-[14px] text-app-success" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                )}
-                {aadhaarStatus === 'NOT_LINKED' && (
-                  <span className="material-symbols-outlined text-[14px] text-app-warning">warning</span>
-                )}
-              </Link>
-            </div>
-          </div>
-          {/* Section: MY TAX RETURN */}
-          <div>
-            <div className="px-3 pb-2 text-[11px] font-semibold text-app-text-muted dark:text-gray-400 tracking-wider uppercase">
-              My Tax Return
-            </div>
-            <div className="space-y-0.5">
-              <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="/individual/eligibility">
-                <span className="material-symbols-outlined text-[19px]">task_alt</span>
-                <span>ITR Eligibility</span>
-              </Link>
-              <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="/individual/documents">
-                <span className="material-symbols-outlined text-[19px]">folder</span>
-                <span>Documents</span>
-              </Link>
-              <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="/individual/income">
-                <span className="material-symbols-outlined text-[19px]">receipt_long</span>
-                <span>Income & Deductions</span>
-              </Link>
-              <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="/individual/tax">
-                <span className="material-symbols-outlined text-[19px]">calculate</span>
-                <span>Tax Calculation</span>
-              </Link>
-            </div>
-          </div>
-          {/* Section: TAX INTELLIGENCE */}
-          <div>
-            <div className="px-3 pb-2 text-[11px] font-semibold text-app-text-muted dark:text-gray-400 tracking-wider uppercase">
-              Tax Intelligence
-            </div>
-            <div className="space-y-0.5">
-              <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="/individual/tax#insights">
-                <span className="material-symbols-outlined text-[19px]">savings</span>
-                <span>Tax Savings</span>
-              </Link>
-              <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="/taxcopilotaichatassistant">
-                <span className="material-symbols-outlined text-[19px]">auto_awesome</span>
-                <span>Tax Copilot</span>
-              </Link>
-            </div>
-          </div>
-          {/* Section: VALIDATION */}
-          <div>
-            <div className="px-3 pb-2 text-[11px] font-semibold text-app-text-muted dark:text-gray-400 tracking-wider uppercase">
-              Validation
-            </div>
-            <div className="space-y-0.5">
-              <Link className="flex items-center justify-between px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="/individual/validation">
-                <span className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[19px]">checklist</span>
-                  <span>Issues & Readiness</span>
-                </span>
-              </Link>
-              <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="/individual/review">
-                <span className="material-symbols-outlined text-[19px]">send</span>
-                <span>Review & File</span>
-              </Link>
-            </div>
-          </div>
+
           {/* Section: SYSTEM */}
           <div>
-            <div className="px-3 pb-2 text-[11px] font-semibold text-app-text-muted dark:text-gray-400 tracking-wider uppercase">
-              System
-            </div>
+            {(!isCollapsed || mobileSidebarOpen) ? (
+              <div className="px-3 pb-2 text-[11px] font-semibold text-app-text-muted dark:text-gray-400 tracking-wider uppercase">
+                System
+              </div>
+            ) : (
+              <div className="my-2 border-t border-app-border/40 dark:border-app-dark-border" />
+            )}
             <div className="space-y-0.5">
-              <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="#">
-                <span className="material-symbols-outlined text-[19px]">settings</span>
-                <span>Settings</span>
+              <Link
+                className={`flex items-center ${isCollapsed ? 'md:justify-center md:px-2' : 'gap-3 px-3'} gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]`}
+                to="#"
+                onClick={() => setMobileSidebarOpen(false)}
+                title="Settings"
+              >
+                <span className="material-symbols-outlined text-[19px] shrink-0">settings</span>
+                {(!isCollapsed || mobileSidebarOpen) && <span>Settings</span>}
               </Link>
-              <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" to="#">
-                <span className="material-symbols-outlined text-[19px]">help_outline</span>
-                <span>Help</span>
+              <Link
+                className={`flex items-center ${isCollapsed ? 'md:justify-center md:px-2' : 'gap-3 px-3'} gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]`}
+                to="#"
+                onClick={() => setMobileSidebarOpen(false)}
+                title="Help"
+              >
+                <span className="material-symbols-outlined text-[19px] shrink-0">help_outline</span>
+                {(!isCollapsed || mobileSidebarOpen) && <span>Help</span>}
               </Link>
             </div>
           </div>
         </nav>
-        {/* Assessee Info / Version Footer */}
-        <div className="p-4 border-t border-app-border dark:border-app-dark-border-sidebar bg-white dark:bg-app-dark-card/40">
-          <div className="flex items-center justify-between text-[12px]">
-            <span className="text-app-text-muted dark:text-gray-400">Assessment Year</span>
-            <span className="font-medium text-app-text-primary dark:text-app-surface tabular-nums">AY 2026–27</span>
-          </div>
+
+        {/* Sidebar Footer: Assessment Year (AY 2026-27) */}
+        <div className="p-3 border-t border-app-border dark:border-app-dark-border bg-white/60 dark:bg-app-dark-card/40 transition-all duration-200">
+          {(!isCollapsed || mobileSidebarOpen) ? (
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-app-text-muted dark:text-gray-400">Assessment Year</span>
+              <span className="font-medium text-app-text-primary dark:text-app-surface tabular-nums">AY 2026–27</span>
+            </div>
+          ) : (
+            <div className="text-[10px] text-center font-semibold text-app-text-muted dark:text-gray-400" title="Assessment Year AY 2026–27">
+              26–27
+            </div>
+          )}
         </div>
       </aside>
 
       {/* ==================== MAIN CONTENT WRAPPER ==================== */}
-      <div className="pl-[250px] pt-16 min-h-screen flex flex-col">
-        <main className="flex-1 w-full py-10 px-12">
-          <div className="max-w-[1320px] mx-auto space-y-10">
+      <div className={`${isCollapsed ? 'md:pl-[70px]' : 'md:pl-[250px]'} pl-0 pt-16 min-h-screen flex flex-col transition-all duration-300 ease-in-out`}>
+        <main className="flex-1 w-full py-6 sm:py-8 lg:py-10 px-4 sm:px-6 lg:px-12">
+          <div className="max-w-[1320px] mx-auto space-y-6 sm:space-y-10">
+
+            {/* Mobile Sidebar Opener Pill */}
+            <div className="md:hidden flex items-center justify-between">
+              <button
+                onClick={() => setMobileSidebarOpen(true)}
+                type="button"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-app-border dark:border-app-dark-border bg-app-surface dark:bg-app-dark-card text-[13px] font-medium text-app-text-secondary dark:text-gray-300 shadow-xs active:bg-black/5"
+              >
+                <span className="material-symbols-outlined text-[17px] text-app-accent">dock_to_right</span>
+                <span>Open Overview Menu</span>
+              </button>
+              <span className="text-[11px] font-medium text-app-text-muted dark:text-gray-400">AY 2026–27</span>
+            </div>
 
             {/* ==================== PAGE HEADER ==================== */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
                 <p className="text-[12px] font-semibold text-app-text-muted dark:text-gray-400 uppercase tracking-wider mb-1">Individual Tax Filing · AY 2026–27</p>
-                <h1 className="font-serif text-[40px] leading-[48px] text-app-text-primary dark:text-app-surface font-normal tracking-tight">
+                <h1 className="font-serif text-[28px] sm:text-[34px] lg:text-[40px] leading-tight text-app-text-primary dark:text-app-surface font-normal tracking-tight">
                   Tax Return Overview
                 </h1>
                 <div className="flex items-center gap-3 mt-1.5">
-                  <p className="text-[15px] text-app-text-secondary dark:text-gray-300">Your FY 2025–26 filing at a glance.</p>
+                  <p className="text-[14px] sm:text-[15px] text-app-text-secondary dark:text-gray-300">Your FY 2025–26 filing at a glance.</p>
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 w-full sm:w-auto">
                 <Link
                   to="/individual/documents"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-app-bg dark:hover:bg-app-dark text-[14px] font-medium transition-all"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-app-border dark:border-app-dark-border text-app-text-secondary dark:text-gray-300 hover:bg-app-bg dark:hover:bg-app-dark hover:border-primary/50 text-[14px] font-medium transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 shadow-xs cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[16px]">upload_file</span>
-                  Upload Docs
+                  <span>Upload Docs</span>
                 </Link>
                 <button
                   onClick={() => navigate(onboardingStep <= 1 ? '/individual/profile' : onboardingStep <= 2 ? '/individual/pan' : onboardingStep <= 3 ? '/individual/aadhaar' : '/individual/eligibility')}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary hover:bg-[#52321c] text-white text-[14px] font-medium transition-all shadow-sm"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary hover:bg-[#72462a] text-white text-[14px] font-medium transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 shadow-sm hover:shadow cursor-pointer"
                   type="button"
                 >
                   <span>Continue Filing</span>

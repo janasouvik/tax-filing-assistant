@@ -2,11 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-app-bg: #F7F5F1;
+  --color-app-surface: #FFFFFF;
+  --color-app-text-primary: #171310;
+  --color-app-text-secondary: #514A44;
+  --color-app-text-muted: #81786F;
+  --color-app-border: #DED7CF;
+  --color-app-border-light: #EFEAE3;
+  --color-app-border-sidebar: #DDD6CE;
+  --color-app-border-header: #D8D1C9;
+  --color-app-accent: #8A5A3C;
+  --color-app-accent-active: #EDE6DF;
+  --color-surface: #fff8f5;
+  --color-surface-bright: #fff8f5;
+  --color-surface-container: #f6ece6;
+  --color-surface-container-low: #fcf2ec;
+  --color-surface-container-high: #f0e6e1;
+  --color-surface-container-highest: #eae1db;
+  --color-surface-container-lowest: #ffffff;
+  --color-on-surface: #1f1b18;
+  --color-on-surface-variant: #51443d;
+  --color-secondary-container: #f4dbcd;
+  --color-on-secondary-container: #725f54;
+  --color-outline: #84746c;
+  --color-outline-variant: #d6c3b9;
+}
+
+.dark {
+  --color-app-bg: #18110B;
+  --color-app-surface: #241810;
+  --color-app-text-primary: #F7F1EB;
+  --color-app-text-secondary: #D4C3B7;
+  --color-app-text-muted: #9C8C80;
+  --color-app-border: #3D2B1E;
+  --color-app-border-light: #322318;
+  --color-app-border-sidebar: #38271B;
+  --color-app-border-header: #38271B;
+  --color-app-accent: #D4936A;
+  --color-app-accent-active: #382519;
+  --color-surface: #18110B;
+  --color-surface-bright: #20150E;
+  --color-surface-container: #281B12;
+  --color-surface-container-low: #1E140D;
+  --color-surface-container-high: #312117;
+  --color-surface-container-highest: #3B281D;
+  --color-surface-container-lowest: #140D08;
+  --color-on-surface: #F7F1EB;
+  --color-on-surface-variant: #D4C3B7;
+  --color-secondary-container: #3E291C;
+  --color-on-secondary-container: #E7D7CC;
+  --color-outline: #7A6659;
+  --color-outline-variant: #473427;
+}
+
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   html, body {
     margin: 0;
     padding: 0;
-    @apply bg-app-bg dark:bg-app-dark text-app-text-primary dark:text-app-surface transition-colors;
+    @apply bg-app-bg dark:bg-app-dark text-app-text-primary dark:text-app-surface;
     font-family: 'Geist', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
@@ -21,10 +78,32 @@
   }
 }
 
+/* Silky smooth global transition when toggling theme */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+              fill 250ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition-delay: 0s !important;
+}
+
 ::-webkit-scrollbar {
   display: none;
 }
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* Ensure any dark:text-app-surface renders as clean, high-contrast readable text */
+.dark .dark\:text-app-surface {
+  color: #F7F1EB !important;
+}
+
+.dark {
+  color-scheme: dark;
 }

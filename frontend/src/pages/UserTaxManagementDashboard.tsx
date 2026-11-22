@@ -1,7 +1,11 @@
 import Navbar from '../components/Navbar';
-
+import { Link } from 'react-router-dom';
+import { useAuth, UserButton } from '@clerk/react';
+import { useTheme } from '../context/ThemeContext';
 
 export default function UserTaxManagementDashboard() {
+  const { isSignedIn } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   return (
     <>
       
@@ -28,65 +32,6 @@ export default function UserTaxManagementDashboard() {
 
 <div>
 <div className="px-3 pb-2 text-[11px] font-semibold text-app-text-muted dark:text-gray-400 tracking-wider uppercase">
-          My Tax Return
-        </div>
-<div className="space-y-0.5">
-<a className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" href="#">
-<span className="material-symbols-outlined text-[19px]">assignment</span>
-<span>Tax Return</span>
-</a>
-<a className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" href="#">
-<span className="material-symbols-outlined text-[19px]">folder</span>
-<span>Documents</span>
-</a>
-<a className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" href="#">
-<span className="material-symbols-outlined text-[19px]">receipt_long</span>
-<span>Income &amp; Deductions</span>
-</a>
-<a className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" href="#">
-<span className="material-symbols-outlined text-[19px]">calculate</span>
-<span>Tax Calculation</span>
-</a>
-</div>
-</div>
-
-<div>
-<div className="px-3 pb-2 text-[11px] font-semibold text-app-text-muted dark:text-gray-400 tracking-wider uppercase">
-          Tax Intelligence
-        </div>
-<div className="space-y-0.5">
-<a className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" href="#">
-<span className="material-symbols-outlined text-[19px]">savings</span>
-<span>Tax Savings</span>
-</a>
-<a className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" href="#">
-<span className="material-symbols-outlined text-[19px]">auto_awesome</span>
-<span>Tax Copilot</span>
-</a>
-</div>
-</div>
-
-<div>
-<div className="px-3 pb-2 text-[11px] font-semibold text-app-text-muted dark:text-gray-400 tracking-wider uppercase">
-          Validation
-        </div>
-<div className="space-y-0.5">
-<a className="flex items-center justify-between px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" href="#">
-<span className="flex items-center gap-3">
-<span className="material-symbols-outlined text-[19px]">checklist</span>
-<span>Issues &amp; Readiness</span>
-</span>
-<span className="px-1.5 py-0.5 text-[11px] font-medium rounded-full bg-app-warning-bg text-app-warning border border-app-warning/20">2</span>
-</a>
-<a className="flex items-center gap-3 px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]" href="#">
-<span className="material-symbols-outlined text-[19px]">send</span>
-<span>Review &amp; File</span>
-</a>
-</div>
-</div>
-
-<div>
-<div className="px-3 pb-2 text-[11px] font-semibold text-app-text-muted dark:text-gray-400 tracking-wider uppercase">
           System
         </div>
 <div className="space-y-0.5">
@@ -100,7 +45,72 @@ export default function UserTaxManagementDashboard() {
 </a>
 </div>
 </div>
+
+<div>
+<div className="px-3 pb-2 text-[11px] font-semibold text-app-text-muted dark:text-gray-400 tracking-wider uppercase">
+          Display & Account
+        </div>
+<div className="space-y-0.5">
+<button
+  onClick={toggleTheme}
+  type="button"
+  className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px] text-left"
+>
+  <span className="flex items-center gap-3">
+    <span className="text-[18px]">{theme === 'dark' ? '☀️' : '🌙'}</span>
+    <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+  </span>
+  <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-black/5 dark:bg-white/10 uppercase">
+    {theme === 'dark' ? 'Dark' : 'Light'}
+  </span>
+</button>
+<div className="flex items-center justify-between px-3 py-2 rounded-lg text-app-text-secondary dark:text-gray-300 hover:bg-black/[0.03] dark:hover:bg-white/[0.03] transition-colors text-[14px]">
+  {isSignedIn ? (
+    <div className="flex items-center gap-3">
+      <UserButton />
+      <span className="text-[14px] text-app-text-primary dark:text-app-surface font-medium truncate max-w-[130px]">
+        Account
+      </span>
+    </div>
+  ) : (
+    <Link
+      to="/sign-in"
+      className="flex items-center gap-3 text-app-text-secondary dark:text-gray-300 hover:text-app-text-primary dark:hover:text-app-surface w-full"
+    >
+      <span className="material-symbols-outlined text-[19px]">login</span>
+      <span>Login</span>
+    </Link>
+  )}
+</div>
+</div>
+</div>
 </nav>
+
+<div className="p-4 border-t border-app-border dark:border-app-dark-border-sidebar bg-white dark:bg-app-dark-card/40 space-y-3">
+  <div className="flex items-center justify-between">
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-lg border border-app-border dark:border-app-dark-border hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-2 text-[13px] text-app-text-secondary dark:text-gray-300"
+      aria-label="Toggle theme"
+      title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+    >
+      <span className="text-[16px]">{theme === 'dark' ? '☀️' : '🌙'}</span>
+      <span className="text-[12px] font-medium">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+    </button>
+    <div className="flex items-center">
+      {isSignedIn ? (
+        <UserButton />
+      ) : (
+        <Link
+          to="/sign-in"
+          className="px-3 py-1.5 rounded-lg bg-primary text-white text-[13px] font-medium hover:bg-primary/90 transition-colors"
+        >
+          Login
+        </Link>
+      )}
+    </div>
+  </div>
+</div>
 
 <div className="p-4 border-t border-app-border dark:border-app-dark-border-sidebar bg-white dark:bg-app-dark-card/40">
 <div className="flex items-center justify-between text-[12px]">
